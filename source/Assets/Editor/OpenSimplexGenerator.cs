@@ -51,7 +51,7 @@ public class OpenSimplexGenerator : EditorWindow {
         _power = EditorGUILayout.Slider("Power", _power, 1f, 8f);
         _inverted = EditorGUILayout.Toggle("Inverted", _inverted);
         if (EditorGUI.EndChangeCheck()) {
-            _frequency = _frequency < 0.01f ? 0.01f : _frequency;
+            _frequency = _frequency < 0f ? 0f : _frequency;
             _preview = GenerateTexture(_preview.width, _preview.height);
         }
 
