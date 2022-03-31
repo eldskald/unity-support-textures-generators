@@ -14,6 +14,8 @@ public class OpenSimplexGenerator : EditorWindow {
     [SerializeField] int _octaves = 4;
     [SerializeField] float _persistance = 0.5f;
     [SerializeField] float _lacunarity = 2f;
+    [SerializeField] float _rangeMin = 0f;
+    [SerializeField] float _rangeMax = 1f;
     [SerializeField] float _power = 1.0f;
     [SerializeField] bool _inverted = false;
     [SerializeField] Vector2Int _resolution = new Vector2Int(256, 256);
@@ -25,6 +27,8 @@ public class OpenSimplexGenerator : EditorWindow {
     SerializedProperty propOctaves;
     SerializedProperty propPersistance;
     SerializedProperty propLacunarity;
+    SerializedProperty propRangeMin;
+    SerializedProperty propRangeMax;
     SerializedProperty propPower;
     SerializedProperty propInverted;
     SerializedProperty propResolution;
@@ -40,6 +44,8 @@ public class OpenSimplexGenerator : EditorWindow {
         propOctaves = so.FindProperty("_octaves");
         propPersistance = so.FindProperty("_persistance");
         propLacunarity = so.FindProperty("_lacunarity");
+        propRangeMin = so.FindProperty("_rangeMin");
+        propRangeMax = so.FindProperty("_rangeMax");
         propPower = so.FindProperty("_power");
         propInverted = so.FindProperty("_inverted");
         propResolution = so.FindProperty("_resolution");
@@ -55,6 +61,10 @@ public class OpenSimplexGenerator : EditorWindow {
             "TOOL_OPENSIMPLEXGENERATOR_persistance", 1f);
         _lacunarity = EditorPrefs.GetFloat(
             "TOOL_OPENSIMPLEXGENERATOR_lacunarity", 1f);
+        _rangeMin = EditorPrefs.GetFloat(
+            "TOOL_OPENSIMPLEXGENERATOR_rangeMin", 0f);
+        _rangeMax = EditorPrefs.GetFloat(
+            "TOOL_OPENSIMPLEXGENERATOR_rangeMax", 1f);
         _power = EditorPrefs.GetFloat(
             "TOOL_OPENSIMPLEXGENERATOR_power", 1f);
         _inverted = EditorPrefs.GetBool(
@@ -81,6 +91,10 @@ public class OpenSimplexGenerator : EditorWindow {
             "TOOL_OPENSIMPLEXGENERATOR_persistance", _persistance);
         EditorPrefs.SetFloat(
             "TOOL_OPENSIMPLEXGENERATOR_lacunarity", _lacunarity);
+        EditorPrefs.SetFloat(
+            "TOOL_OPENSIMPLEXGENERATOR_rangeMin", _rangeMin);
+        EditorPrefs.SetFloat(
+            "TOOL_OPENSIMPLEXGENERATOR_rangeMax", _rangeMax);
         EditorPrefs.SetFloat(
             "TOOL_OPENSIMPLEXGENERATOR_power", _power);
         EditorPrefs.SetBool(
@@ -112,13 +126,18 @@ public class OpenSimplexGenerator : EditorWindow {
         GUILayout.Label("Noise Settings", EditorStyles.boldLabel);
         EditorGUI.BeginChangeCheck();
         propFrequency.floatValue = EditorGUILayout.FloatField(
-            "Frequency",propFrequency.floatValue);
+            "Frequency", propFrequency.floatValue);
         propOctaves.intValue = EditorGUILayout.IntSlider(
             "Octaves", propOctaves.intValue, 1, 9);
         propPersistance.floatValue = EditorGUILayout.Slider(
             "Persistance", propPersistance.floatValue, 0f, 1f);
         propLacunarity.floatValue = EditorGUILayout.Slider(
             "Lacunarity", propLacunarity.floatValue, 0.1f, 4.0f);
+        EditorGUILayout.LabelField(
+            "Range:", _rangeMin.ToString() + " to " + _rangeMax.ToString());
+        EditorGUILayout.MinMaxSlider(ref _rangeMin, ref _rangeMax, 0f, 1f);
+        propRangeMin.floatValue = _rangeMin;
+        propRangeMax.floatValue = _rangeMax;
         propPower.floatValue = EditorGUILayout.Slider(
             "Power", propPower.floatValue, 1f, 8f);
         propInverted.boolValue = EditorGUILayout.Toggle(
@@ -145,7 +164,7 @@ public class OpenSimplexGenerator : EditorWindow {
 
         // Draw preview texture.
         GUILayout.Space(10);
-        EditorGUI.DrawPreviewTexture(new Rect(32, 300, 192, 192), _preview);
+        EditorGUI.DrawPreviewTexture(new Rect(32, 330, 192, 192), _preview);
 
         // Save button.
         GUILayout.Space(256);
@@ -205,6 +224,7 @@ public class OpenSimplexGenerator : EditorWindow {
             for (int j = 0; j < height; j++) {
                 float value = values[i, j];
                 value = Mathf.InverseLerp(minValue, maxValue, value);
+                value = Mathf.InverseLerp(_rangeMin, _rangeMax, value);
                 
                 float k = Mathf.Pow(2f, _power - 1f);
                 if (value < 0.5f) {

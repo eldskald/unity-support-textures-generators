@@ -3,7 +3,7 @@
 // the GPU and therefore is much faster than the CPU. You can use it as a
 // reference on how to use it on a realtime shader for your game.
 
-Shader "Noise/VoronoiNoise4D" {
+Shader "Editor/VoronoiNoiseGenerator" {
 
 	Properties {
 
@@ -11,10 +11,10 @@ Shader "Noise/VoronoiNoise4D" {
 		[KeywordEnum(One, Two)] _Combination ("Combination", Float) = 0
 
 		[Header(Noise Properties)]
+		_Frequency ("Frequency", Float) = 1
 		_Octaves ("Octaves", Int) = 1
-		_Frequency ("Frequency", Float) = 10
-		_Lacunarity ("Lacunarity", Range(0.1, 4)) = 2
 		_Persistance ("Persistance", Range(0, 1)) = 0.5
+		_Lacunarity ("Lacunarity", Range(0.1, 4)) = 2
 		_Jitter ("Jitter", Range(0, 1)) = 1
 
 		[Header(Noise Modifiers)]
