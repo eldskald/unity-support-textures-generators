@@ -9,17 +9,17 @@ public class OpenSimplexGenerator : EditorWindow {
     [MenuItem("Tools/Support Textures Generators/Open Simplex Generator")]
     public static void OpenWindow () => GetWindow<OpenSimplexGenerator>();
 
-    [SerializeField] int _seed = 0;
-    [SerializeField] float _frequency = 1f;
-    [SerializeField] int _octaves = 4;
-    [SerializeField] float _persistance = 0.5f;
-    [SerializeField] float _lacunarity = 2f;
-    [SerializeField] float _rangeMin = 0f;
-    [SerializeField] float _rangeMax = 1f;
-    [SerializeField] float _power = 1.0f;
-    [SerializeField] bool _inverted = false;
-    [SerializeField] Vector2Int _resolution = new Vector2Int(256, 256);
-    [SerializeField] string _path = "Textures/new-noise.png";
+    [SerializeField] int _seed;
+    [SerializeField] float _frequency;
+    [SerializeField] int _octaves;
+    [SerializeField] float _persistance;
+    [SerializeField] float _lacunarity;
+    [SerializeField] float _rangeMin;
+    [SerializeField] float _rangeMax;
+    [SerializeField] float _power;
+    [SerializeField] bool _inverted;
+    [SerializeField] Vector2Int _resolution;
+    [SerializeField] string _path;
 
     SerializedObject so;
     SerializedProperty propSeed;
@@ -56,9 +56,9 @@ public class OpenSimplexGenerator : EditorWindow {
         _frequency = EditorPrefs.GetFloat(
             "TOOL_OPENSIMPLEXGENERATOR_frequency", 1f);
         _octaves = EditorPrefs.GetInt(
-            "TOOL_OPENSIMPLEXGENERATOR_octaves", 4);
+            "TOOL_OPENSIMPLEXGENERATOR_octaves", 1);
         _persistance = EditorPrefs.GetFloat(
-            "TOOL_OPENSIMPLEXGENERATOR_persistance", 1f);
+            "TOOL_OPENSIMPLEXGENERATOR_persistance", 0.5f);
         _lacunarity = EditorPrefs.GetFloat(
             "TOOL_OPENSIMPLEXGENERATOR_lacunarity", 1f);
         _rangeMin = EditorPrefs.GetFloat(
