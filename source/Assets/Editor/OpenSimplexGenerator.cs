@@ -9,32 +9,101 @@ public class OpenSimplexGenerator : EditorWindow {
     [MenuItem("Tools/Support Textures Generators/Open Simplex Generator")]
     public static void OpenWindow () => GetWindow<OpenSimplexGenerator>();
 
-    [SerializeField] private int _seed = 0;
-    [SerializeField] private float _frequency = 1f;
-    [SerializeField] private int _octaves = 4;
-    [SerializeField] private float _persistance = 0.5f;
-    [SerializeField] private float _lacunarity = 2f;
-    [SerializeField] private float _power = 1.0f;
-    [SerializeField] private bool _inverted = false;
-    [SerializeField] private Vector2Int _resolution = new Vector2Int(256, 256);
-    [SerializeField] private string _path = "Textures/new-noise.png";
+    [SerializeField] int _seed = 0;
+    [SerializeField] float _frequency = 1f;
+    [SerializeField] int _octaves = 4;
+    [SerializeField] float _persistance = 0.5f;
+    [SerializeField] float _lacunarity = 2f;
+    [SerializeField] float _power = 1.0f;
+    [SerializeField] bool _inverted = false;
+    [SerializeField] Vector2Int _resolution = new Vector2Int(256, 256);
+    [SerializeField] string _path = "Textures/new-noise.png";
+
+    SerializedObject so;
+    SerializedProperty propSeed;
+    SerializedProperty propFrequency;
+    SerializedProperty propOctaves;
+    SerializedProperty propPersistance;
+    SerializedProperty propLacunarity;
+    SerializedProperty propPower;
+    SerializedProperty propInverted;
+    SerializedProperty propResolution;
+    SerializedProperty propPath;
 
     private long[] _seeds;
     private Texture2D _preview;
 
     private void OnEnable () {
+        so = new SerializedObject(this);
+        propSeed = so.FindProperty("_seed");
+        propFrequency = so.FindProperty("_frequency");
+        propOctaves = so.FindProperty("_octaves");
+        propPersistance = so.FindProperty("_persistance");
+        propLacunarity = so.FindProperty("_lacunarity");
+        propPower = so.FindProperty("_power");
+        propInverted = so.FindProperty("_inverted");
+        propResolution = so.FindProperty("_resolution");
+        propPath = so.FindProperty("_path");
+
+        _seed = EditorPrefs.GetInt(
+            "TOOL_OPENSIMPLEXGENERATOR_seed", 0);
+        _frequency = EditorPrefs.GetFloat(
+            "TOOL_OPENSIMPLEXGENERATOR_frequency", 1f);
+        _octaves = EditorPrefs.GetInt(
+            "TOOL_OPENSIMPLEXGENERATOR_octaves", 4);
+        _persistance = EditorPrefs.GetFloat(
+            "TOOL_OPENSIMPLEXGENERATOR_persistance", 1f);
+        _lacunarity = EditorPrefs.GetFloat(
+            "TOOL_OPENSIMPLEXGENERATOR_lacunarity", 1f);
+        _power = EditorPrefs.GetFloat(
+            "TOOL_OPENSIMPLEXGENERATOR_power", 1f);
+        _inverted = EditorPrefs.GetBool(
+            "TOOL_OPENSIMPLEXGENERATOR_inverted", false);
+        _resolution.x = EditorPrefs.GetInt(
+            "TOOL_OPENSIMPLEXGENERATOR_resolution_x", 256);
+        _resolution.y = EditorPrefs.GetInt(
+            "TOOL_OPENSIMPLEXGENERATOR_resolution_y", 256);
+        _path = EditorPrefs.GetString(
+            "TOOL_OPENSIMPLEXGENERATOR_path", "Textures/new-noise.png");
+
         SetSeeds(_seed);
         _preview = GenerateTexture(192, 192);
     }
 
+    private void OnDisable() {
+        EditorPrefs.SetInt(
+            "TOOL_OPENSIMPLEXGENERATOR_seed", _seed);
+        EditorPrefs.SetFloat(
+            "TOOL_OPENSIMPLEXGENERATOR_frequency", _frequency);
+        EditorPrefs.SetInt(
+            "TOOL_OPENSIMPLEXGENERATOR_octaves", _octaves);
+        EditorPrefs.SetFloat(
+            "TOOL_OPENSIMPLEXGENERATOR_persistance", _persistance);
+        EditorPrefs.SetFloat(
+            "TOOL_OPENSIMPLEXGENERATOR_lacunarity", _lacunarity);
+        EditorPrefs.SetFloat(
+            "TOOL_OPENSIMPLEXGENERATOR_power", _power);
+        EditorPrefs.SetBool(
+            "TOOL_OPENSIMPLEXGENERATOR_inverted", _inverted);
+        EditorPrefs.SetInt(
+            "TOOL_OPENSIMPLEXGENERATOR_resolution_x", _resolution.x);
+        EditorPrefs.SetInt(
+            "TOOL_OPENSIMPLEXGENERATOR_resolution_y", _resolution.y);
+        EditorPrefs.SetString(
+            "TOOL_OPENSIMPLEXGENERATOR_path", _path);
+    }
+
     private void OnGUI () {
-        
+        so.Update();
+
         // Seeds. We need a different seed for each octave, which is why we
         // use a seeds array.
         EditorGUI.BeginChangeCheck();
-        _seed = EditorGUILayout.IntField("Seed", _seed);
+        propSeed.intValue = EditorGUILayout.IntField(
+            "Seed", propSeed.intValue);
         if (EditorGUI.EndChangeCheck()) {
-            SetSeeds(_seed);
+            SetSeeds(propSeed.intValue);
+            so.ApplyModifiedProperties();
             _preview = GenerateTexture(_preview.width, _preview.height);
         }
 
@@ -42,15 +111,20 @@ public class OpenSimplexGenerator : EditorWindow {
         GUILayout.Space(10);
         GUILayout.Label("Noise Settings", EditorStyles.boldLabel);
         EditorGUI.BeginChangeCheck();
-        _frequency = EditorGUILayout.FloatField("Frequency", _frequency);
-        _octaves = EditorGUILayout.IntSlider("Octaves", _octaves, 1, 9);
-        _persistance = EditorGUILayout.Slider(
-            "Persistance", _persistance, 0f, 1f);
-        _lacunarity = EditorGUILayout.Slider(
-            "Lacunarity", _lacunarity, 0.1f, 4.0f);
-        _power = EditorGUILayout.Slider("Power", _power, 1f, 8f);
-        _inverted = EditorGUILayout.Toggle("Inverted", _inverted);
+        propFrequency.floatValue = EditorGUILayout.FloatField(
+            "Frequency",propFrequency.floatValue);
+        propOctaves.intValue = EditorGUILayout.IntSlider(
+            "Octaves", propOctaves.intValue, 1, 9);
+        propPersistance.floatValue = EditorGUILayout.Slider(
+            "Persistance", propPersistance.floatValue, 0f, 1f);
+        propLacunarity.floatValue = EditorGUILayout.Slider(
+            "Lacunarity", propLacunarity.floatValue, 0.1f, 4.0f);
+        propPower.floatValue = EditorGUILayout.Slider(
+            "Power", propPower.floatValue, 1f, 8f);
+        propInverted.boolValue = EditorGUILayout.Toggle(
+            "Inverted", propInverted.boolValue);
         if (EditorGUI.EndChangeCheck()) {
+            so.ApplyModifiedProperties();
             _frequency = _frequency < 0f ? 0f : _frequency;
             _preview = GenerateTexture(_preview.width, _preview.height);
         }
@@ -58,13 +132,20 @@ public class OpenSimplexGenerator : EditorWindow {
         // Texture settings. They don't cause the preview to change.
         GUILayout.Space(10);
         GUILayout.Label("Target File Settings", EditorStyles.boldLabel);
-        _resolution = EditorGUILayout.Vector2IntField(
-            "Texture Resolution", _resolution);
-        _path = EditorGUILayout.TextField("File Path", _path);
+        EditorGUI.BeginChangeCheck();
+        propResolution.vector2IntValue = EditorGUILayout.Vector2IntField(
+            "Texture Resolution", propResolution.vector2IntValue);
+        propPath.stringValue = EditorGUILayout.TextField(
+            "File Path", propPath.stringValue);
+        if (EditorGUI.EndChangeCheck()) {
+            so.ApplyModifiedProperties();
+            _resolution.x = _resolution.x < 1 ? 1 : _resolution.x;
+            _resolution.y = _resolution.y < 1 ? 1 : _resolution.y;
+        }
 
         // Draw preview texture.
         GUILayout.Space(10);
-        EditorGUI.DrawPreviewTexture(new Rect(16, 300, 192, 192), _preview);
+        EditorGUI.DrawPreviewTexture(new Rect(32, 300, 192, 192), _preview);
 
         // Save button.
         GUILayout.Space(256);
@@ -73,6 +154,7 @@ public class OpenSimplexGenerator : EditorWindow {
             byte[] data = tex.EncodeToPNG();
             File.WriteAllBytes(
                 string.Format("{0}/{1}", Application.dataPath, _path), data);
+            AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
         }
     }
 
