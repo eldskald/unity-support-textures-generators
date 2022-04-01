@@ -6,7 +6,7 @@ using UnityEditor;
 
 public class OpenSimplexGenerator : EditorWindow {
 
-    [MenuItem("Tools/Support Textures Generators/Open Simplex Generator")]
+    [MenuItem("Tools/Support Textures Generators/Open Simplex Noise Generator")]
     public static void OpenWindow () => GetWindow<OpenSimplexGenerator>();
 
     [SerializeField] int _seed;
@@ -171,6 +171,7 @@ public class OpenSimplexGenerator : EditorWindow {
         if (GUILayout.Button("Save Texture")) {
             Texture2D tex = GenerateTexture(_resolution.x, _resolution.y);
             byte[] data = tex.EncodeToPNG();
+            Object.DestroyImmediate(tex);
             File.WriteAllBytes(
                 string.Format("{0}/{1}", Application.dataPath, _path), data);
             AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);

@@ -20,6 +20,8 @@ Shader "Editor/VoronoiNoiseGenerator" {
 		[Header(Noise Modifiers)]
 		_Scale ("Scale", Float) = 1
 		_Offset ("Offset", Float) = 0
+		_RangeMin ("Range Min", Float) = 0
+		_RangeMax ("Range Max", Float) = 1
 		_Power ("Power", Range(1, 8)) = 1
 		[Toggle(_INVERTED)] _Inverted ("Inverted", Float) = 0
 	}
@@ -37,7 +39,7 @@ Shader "Editor/VoronoiNoiseGenerator" {
 			#pragma fragment frag
 
 			#include "UnityCG.cginc"
-			#include "GPUVoronoiNoise4D.cginc"
+			#include "Assets/Shaders/GPUVoronoiNoise4D.cginc"
 
 			struct appdata {
 				float4 vertex : POSITION;
@@ -51,7 +53,7 @@ Shader "Editor/VoronoiNoiseGenerator" {
 
 			float _Variation;
 			float _Octaves, _Frequency, _Lacunarity, _Persistance, _Jitter;
-			float _Scale, _Offset, _Power;
+			float _Scale, _Offset, _RangeMin, _RangeMax, _Power;
 
 			float4 TorusMapping (float2 i) {
 				float4 o = 0;
@@ -83,6 +85,7 @@ Shader "Editor/VoronoiNoiseGenerator" {
 				#endif
 			
 				noise = noise * _Scale + _Offset;
+				noise = (noise - _RangeMin) / (_RangeMax - _RangeMin);
 				noise = saturate(noise);
 
 				float k = pow(2, _Power - 1);

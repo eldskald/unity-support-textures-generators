@@ -1,12 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using Unity.Collections;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEditor;
 
 public class VoronoiGenerator : EditorWindow {
 
-    [MenuItem("Tools/Support Textures Generators/Voronoi Generator")]
+    [MenuItem("Tools/Support Textures Generators/Voronoi Noise Generator")]
     public static void OpenWindow () => GetWindow<VoronoiGenerator>();
 
     private enum CombinationMode {
@@ -23,6 +25,8 @@ public class VoronoiGenerator : EditorWindow {
     [SerializeField] float _jitter;
     [SerializeField] float _scale;
     [SerializeField] float _offset;
+    [SerializeField] float _rangeMin;
+    [SerializeField] float _rangeMax;
     [SerializeField] float _power;
     [SerializeField] bool _inverted;
     [SerializeField] Vector2Int _resolution;
@@ -38,6 +42,8 @@ public class VoronoiGenerator : EditorWindow {
     SerializedProperty propJitter;
     SerializedProperty propScale;
     SerializedProperty propOffset;
+    SerializedProperty propRangeMin;
+    SerializedProperty propRangeMax;
     SerializedProperty propPower;
     SerializedProperty propInverted;
     SerializedProperty propResolution;
@@ -57,6 +63,8 @@ public class VoronoiGenerator : EditorWindow {
         propJitter = so.FindProperty("_jitter");
         propScale = so.FindProperty("_scale");
         propOffset = so.FindProperty("_offset");
+        propRangeMin = so.FindProperty("_rangeMin");
+        propRangeMax = so.FindProperty("_rangeMax");
         propPower = so.FindProperty("_power");
         propInverted = so.FindProperty("_inverted");
         propResolution = so.FindProperty("_resolution");
@@ -80,6 +88,10 @@ public class VoronoiGenerator : EditorWindow {
             "TOOL_VORONOIGENERATOR_scale", 1f);
         _offset = EditorPrefs.GetFloat(
             "TOOL_VORONOIGENERATOR_offset", 0f);
+        _rangeMin = EditorPrefs.GetFloat(
+            "TOOL_VORONOIGENERATOR_rangeMin", 0f);
+        _rangeMax = EditorPrefs.GetFloat(
+            "TOOL_VORONOIGENERATOR_rangeMax", 1f);
         _power = EditorPrefs.GetFloat(
             "TOOL_VORONOIGENERATOR_power", 1f);
         _inverted = EditorPrefs.GetBool(
@@ -93,7 +105,7 @@ public class VoronoiGenerator : EditorWindow {
         
         _material = new Material(Shader.Find("Editor/VoronoiNoiseGenerator"));
         UpdateMaterial();
-        _preview = GenerateTexture(192, 192);
+        _preview = GeneratePreview(192, 192);
     }
 
     private void OnDisable () {
@@ -115,6 +127,10 @@ public class VoronoiGenerator : EditorWindow {
             "TOOL_VORONOIGENERATOR_scale", _scale);
         EditorPrefs.SetFloat(
             "TOOL_VORONOIGENERATOR_offset", _offset);
+        EditorPrefs.SetFloat(
+            "TOOL_VORONOIGENERATOR_rangeMin", _rangeMin);
+        EditorPrefs.SetFloat(
+            "TOOL_VORONOIGENERATOR_rangeMax", _rangeMax);
         EditorPrefs.SetFloat(
             "TOOL_VORONOIGENERATOR_power", _power);
         EditorPrefs.SetBool(
@@ -147,9 +163,14 @@ public class VoronoiGenerator : EditorWindow {
         propLacunarity.floatValue = EditorGUILayout.Slider(
             "Lacunarity", propLacunarity.floatValue, 0.1f, 4.0f);
         propScale.floatValue = EditorGUILayout.FloatField(
-            "Power", propScale.floatValue);
+            "Scale", propScale.floatValue);
         propOffset.floatValue = EditorGUILayout.FloatField(
-            "Power", propOffset.floatValue);
+            "Offset", propOffset.floatValue);
+        EditorGUILayout.LabelField(
+            "Range:", _rangeMin.ToString() + " to " + _rangeMax.ToString());
+        EditorGUILayout.MinMaxSlider(ref _rangeMin, ref _rangeMax, 0f, 1f);
+        propRangeMin.floatValue = _rangeMin;
+        propRangeMax.floatValue = _rangeMax;
         propPower.floatValue = EditorGUILayout.Slider(
             "Power", propPower.floatValue, 1f, 8f);
         propInverted.boolValue = EditorGUILayout.Toggle(
@@ -159,7 +180,7 @@ public class VoronoiGenerator : EditorWindow {
             _frequency = _frequency < 0f ? 0f : _frequency;
             _scale = _scale < 0f ? 0f : _scale;
             UpdateMaterial();
-            _preview = GenerateTexture(_preview.width, _preview.height);
+            _preview = GeneratePreview(_preview.width, _preview.height);
         }
 
         // Texture settings. They don't cause the preview to change.
@@ -176,11 +197,16 @@ public class VoronoiGenerator : EditorWindow {
             _resolution.y = _resolution.y < 1 ? 1 : _resolution.y;
         }
 
+        // Draw preview texture.
+        GUILayout.Space(10);
+        EditorGUI.DrawPreviewTexture(new Rect(32, 370, 192, 192), _preview);
+
         // Save button.
-        GUILayout.Space(256);
+        GUILayout.Space(236);
         if (GUILayout.Button("Save Texture")) {
             Texture2D tex = GenerateTexture(_resolution.x, _resolution.y);
             byte[] data = tex.EncodeToPNG();
+            Object.DestroyImmediate(tex);
             File.WriteAllBytes(
                 string.Format("{0}/{1}", Application.dataPath, _path), data);
             AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
@@ -206,6 +232,8 @@ public class VoronoiGenerator : EditorWindow {
         _material.SetFloat("_Jitter", _jitter);
         _material.SetFloat("_Scale", _scale);
         _material.SetFloat("_Offset", _offset);
+        _material.SetFloat("_RangeMin", _rangeMin);
+        _material.SetFloat("_RangeMax", _rangeMax);
         _material.SetFloat("_Power", _power);
         switch (_inverted) {
             case true:
@@ -217,13 +245,34 @@ public class VoronoiGenerator : EditorWindow {
         }
     }
 
+    private Texture2D GeneratePreview (int width, int height) {
+        Texture2D tex = new Texture2D(
+            width, height, TextureFormat.ARGB32, false);
+        RenderTexture temp = RenderTexture.GetTemporary(
+            width, height, 0, RenderTextureFormat.ARGB32);
+        Graphics.Blit(tex, temp, _material);
+        Graphics.CopyTexture(temp, tex);
+        RenderTexture.ReleaseTemporary(temp);
+        return tex;
+    }
+
     private Texture2D GenerateTexture (int width, int height) {
         Texture2D tex = new Texture2D(
             width, height, TextureFormat.ARGB32, false);
-        RenderTexture renderTex = RenderTexture.GetTemporary(width, height, 0);
-        Graphics.Blit(tex, renderTex, _material);
-        Graphics.CopyTexture(renderTex, tex);
-        RenderTexture.ReleaseTemporary(renderTex);
+        RenderTexture temp = RenderTexture.GetTemporary(
+            width, height, 0, RenderTextureFormat.ARGB32);
+        Graphics.Blit(tex, temp, _material);
+
+        // We can't just .CopyTexture() and .EncodeToPNG() because
+        // .EncodeToPNG() grabs what's on the texture on the RAM, but
+        // .CopyTexture() only changes the texture on the GPU. In order
+        // to bring the GPU memory back into the CPU, we need a .ReadPixels()
+        // call, whence why the existence of this whole function.
+        RenderTexture.active = temp;
+        tex.ReadPixels(new Rect(0, 0, width, height), 0, 0);
+        RenderTexture.active = null;
+        RenderTexture.ReleaseTemporary(temp);
+
         return tex;
     }
 
