@@ -3,7 +3,7 @@
 // the GPU and therefore is much faster than the CPU. You can use it as a
 // reference on how to use it on a realtime shader for your game.
 
-Shader "Editor/VoronoiNoiseGenerator" {
+Shader "Editor/CellularNoiseGenerator" {
 
 	Properties {
 
@@ -40,7 +40,7 @@ Shader "Editor/VoronoiNoiseGenerator" {
 			#include "UnityCG.cginc"
 
 			// Change this line to have it pointing to the right file.
-			#include "Assets/Shaders/GPUVoronoiNoise4D.cginc"
+			#include "Assets/Shaders/CellularNoise4D.cginc"
 
 			struct appdata {
 				float4 vertex : POSITION;

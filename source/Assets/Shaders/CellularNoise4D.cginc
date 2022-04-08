@@ -1,5 +1,6 @@
 // This is Justin Hawkin's repository cginc with some slight modifications in
-// order to make it easier to incorporate on any other shader you might want to.
+// order to make it easier to incorporate on any other shader you might want to
+// and to make it easier to normalize the final texture.
 
 //1/7
 #define K 0.142857142857
@@ -79,9 +80,6 @@ float fBm_F0(float4 p, float offset, int octaves, float frequency, float lacunar
 	float sum = 0;	
 	for(int i = 0; i < octaves; i++) 
 	{
-		// float2 F = inoise(p * freq + offset + freq * 5, jitter) * amp;
-		// sum += 0.1 + sqrt(F[0]);
-
 		float2 F = inoise(p * freq + offset + freq * 5, jitter);
 		sum += sqrt(F[0]) * amp;
 		
@@ -97,9 +95,6 @@ float fBm_F1_F0(float4 p, float offset, int octaves, float frequency, float lacu
 	float sum = 0;	
 	for(int i = 0; i < octaves; i++) 
 	{
-		// float2 F = inoise(p * freq + offset + freq * 5, jitter) * amp;
-		// sum += 0.1 + sqrt(F[1]) - sqrt(F[0]);
-
 		float2 F = inoise(p * freq + offset + freq * 5, jitter);
 		sum += (sqrt(F[1]) - sqrt(F[0])) * amp;
 		

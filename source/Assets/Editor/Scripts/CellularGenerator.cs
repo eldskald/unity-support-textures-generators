@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using Unity.Collections;
 using UnityEngine;
-using UnityEngine.Rendering;
 using UnityEditor;
 
-public class VoronoiGenerator : EditorWindow {
+public class CellularGenerator : EditorWindow {
 
-    [MenuItem("Tools/Support Textures Generators/Voronoi Noise Generator")]
-    public static void OpenWindow () => GetWindow<VoronoiGenerator>();
+    [MenuItem("Tools/Support Textures Generators/Cellular Noise Generator")]
+    public static void OpenWindow () => GetWindow<CellularGenerator>();
 
     private enum CombinationMode {
         First = 0,
@@ -65,35 +64,35 @@ public class VoronoiGenerator : EditorWindow {
         propPath = so.FindProperty("_path");
 
         _variation = EditorPrefs.GetFloat(
-            "TOOL_VORONOIGENERATOR_variation", 0f);
+            "TOOL_CELLULARGENERATOR_variation", 0f);
         _combination = (CombinationMode)EditorPrefs.GetInt(
-            "TOOL_VORONOIGENERATOR_combination", 0);
+            "TOOL_CELLULARGENERATOR_combination", 0);
         _frequency = EditorPrefs.GetFloat(
-            "TOOL_VORONOIGENERATOR_frequency", 1f);
+            "TOOL_CELLULARGENERATOR_frequency", 1f);
         _octaves = EditorPrefs.GetInt(
-            "TOOL_VORONOIGENERATOR_octaves", 1);
+            "TOOL_CELLULARGENERATOR_octaves", 1);
         _persistance = EditorPrefs.GetFloat(
-            "TOOL_VORONOIGENERATOR_persistance", 0.5f);
+            "TOOL_CELLULARGENERATOR_persistance", 0.5f);
         _lacunarity = EditorPrefs.GetFloat(
-            "TOOL_VORONOIGENERATOR_lacunarity", 2f);
+            "TOOL_CELLULARGENERATOR_lacunarity", 2f);
         _jitter = EditorPrefs.GetFloat(
-            "TOOL_VORONOIGENERATOR_jitter", 1f);
+            "TOOL_CELLULARGENERATOR_jitter", 1f);
         _rangeMin = EditorPrefs.GetFloat(
-            "TOOL_VORONOIGENERATOR_rangeMin", 0f);
+            "TOOL_CELLULARGENERATOR_rangeMin", 0f);
         _rangeMax = EditorPrefs.GetFloat(
-            "TOOL_VORONOIGENERATOR_rangeMax", 1f);
+            "TOOL_CELLULARGENERATOR_rangeMax", 1f);
         _power = EditorPrefs.GetFloat(
-            "TOOL_VORONOIGENERATOR_power", 1f);
+            "TOOL_CELLULARGENERATOR_power", 1f);
         _inverted = EditorPrefs.GetBool(
-            "TOOL_VORONOIGENERATOR_inverted", false);
+            "TOOL_CELLULARGENERATOR_inverted", false);
         _resolution.x = EditorPrefs.GetInt(
-            "TOOL_VORONOIGENERATOR_resolution_x", 256);
+            "TOOL_CELLULARGENERATOR_resolution_x", 256);
         _resolution.y = EditorPrefs.GetInt(
-            "TOOL_VORONOIGENERATOR_resolution_y", 256);
+            "TOOL_CELLULARGENERATOR_resolution_y", 256);
         _path = EditorPrefs.GetString(
-            "TOOL_VORONOIGENERATOR_path", "Textures/new-noise.png");
+            "TOOL_CELLULARGENERATOR_path", "Textures/new-noise.png");
         
-        _material = new Material(Shader.Find("Editor/VoronoiNoiseGenerator"));
+        _material = new Material(Shader.Find("Editor/CellularNoiseGenerator"));
         UpdateMaterial();
         _preview = GeneratePreview(192, 192);
 
@@ -102,33 +101,33 @@ public class VoronoiGenerator : EditorWindow {
 
     private void OnDisable () {
         EditorPrefs.SetFloat(
-            "TOOL_VORONOIGENERATOR_variation", _variation);
+            "TOOL_CELLULARGENERATOR_variation", _variation);
         EditorPrefs.SetInt(
-            "TOOL_VORONOIGENERATOR_combination", (int)_combination);
+            "TOOL_CELLULARGENERATOR_combination", (int)_combination);
         EditorPrefs.SetFloat(
-            "TOOL_VORONOIGENERATOR_frequency", _frequency);
+            "TOOL_CELLULARGENERATOR_frequency", _frequency);
         EditorPrefs.SetInt(
-            "TOOL_VORONOIGENERATOR_octaves", _octaves);
+            "TOOL_CELLULARGENERATOR_octaves", _octaves);
         EditorPrefs.SetFloat(
-            "TOOL_VORONOIGENERATOR_persistance", _persistance);
+            "TOOL_CELLULARGENERATOR_persistance", _persistance);
         EditorPrefs.SetFloat(
-            "TOOL_VORONOIGENERATOR_lacunarity", _lacunarity);
+            "TOOL_CELLULARGENERATOR_lacunarity", _lacunarity);
         EditorPrefs.SetFloat(
-            "TOOL_VORONOIGENERATOR_jitter", _jitter);
+            "TOOL_CELLULARGENERATOR_jitter", _jitter);
         EditorPrefs.SetFloat(
-            "TOOL_VORONOIGENERATOR_rangeMin", _rangeMin);
+            "TOOL_CELLULARGENERATOR_rangeMin", _rangeMin);
         EditorPrefs.SetFloat(
-            "TOOL_VORONOIGENERATOR_rangeMax", _rangeMax);
+            "TOOL_CELLULARGENERATOR_rangeMax", _rangeMax);
         EditorPrefs.SetFloat(
-            "TOOL_VORONOIGENERATOR_power", _power);
+            "TOOL_CELLULARGENERATOR_power", _power);
         EditorPrefs.SetBool(
-            "TOOL_VORONOIGENERATOR_inverted", _inverted);
+            "TOOL_CELLULARGENERATOR_inverted", _inverted);
         EditorPrefs.SetInt(
-            "TOOL_VORONOIGENERATOR_resolution_x", _resolution.x);
+            "TOOL_CELLULARGENERATOR_resolution_x", _resolution.x);
         EditorPrefs.SetInt(
-            "TOOL_VORONOIGENERATOR_resolution_y", _resolution.y);
+            "TOOL_CELLULARGENERATOR_resolution_y", _resolution.y);
         EditorPrefs.SetString(
-            "TOOL_VORONOIGENERATOR_path", _path);
+            "TOOL_CELLULARGENERATOR_path", _path);
     }
 
     private void OnGUI () {
@@ -168,6 +167,7 @@ public class VoronoiGenerator : EditorWindow {
             "Inverted", propInverted.boolValue);
         if (EditorGUI.EndChangeCheck()) {
             so.ApplyModifiedProperties();
+            _variation = _variation < 0f ? 0f : _variation;
             _frequency = _frequency < 0f ? 0f : _frequency;
             UpdateMaterial();
             _preview = GeneratePreview(_preview.width, _preview.height);
