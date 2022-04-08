@@ -74,19 +74,25 @@ Shader "Editor/CellularNoiseGenerator" {
 
 			float4 frag (v2f i) : SV_TARGET {
 				float4 coords = TorusMapping(i.uv);
+
 				float noise = 0;
+				float freq = _Frequency;
+				float amp = 0.5;	
+				for (int i = 0; i < _Octaves; i++) {
+					float4 p = coords * freq + _Variation + i + freq * 5;
+					float2 F = inoise(p, _Jitter);
 
-				#ifdef _COMBINATION_ONE
-					noise = fBm_F0(
-						coords, _Variation, _Octaves, _Frequency,
-						_Lacunarity, _Persistance, _Jitter);
-				#endif
+					#ifdef _COMBINATION_ONE
+						noise += sqrt(F.x) * amp;
+					#endif
 
-				#ifdef _COMBINATION_TWO
-					noise = fBm_F1_F0(
-						coords, _Variation, _Octaves, _Frequency,
-						_Lacunarity, _Persistance, _Jitter);
-				#endif
+					#ifdef _COMBINATION_TWO
+						noise += (sqrt(F.y) - sqrt(F.x)) * amp;
+					#endif
+					
+					freq *= _Lacunarity;
+					amp *= _Persistance;
+				}
 			
 				noise = noise / _NormFactor;
 				noise = (noise - _RangeMin) / (_RangeMax - _RangeMin);

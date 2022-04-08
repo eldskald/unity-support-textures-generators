@@ -1,6 +1,7 @@
 // This is Justin Hawkin's repository cginc with some slight modifications in
-// order to make it easier to incorporate on any other shader you might want to
-// and to make it easier to normalize the final texture.
+// order to accomodate the needs of this project.
+
+// uniform float _Frequency, _Lacunarity, _Gain, _Jitter, _Amp;
 
 //1/7
 #define K 0.142857142857
@@ -73,33 +74,35 @@ float2 inoise(float4 P, float jitter)
 	return F;
 }
 
-// fractal sum, range -1.0 - 1.0
-float fBm_F0(float4 p, float offset, int octaves, float frequency, float lacunarity, float persistance, float jitter)
-{
-	float freq = frequency, amp = 0.5;
-	float sum = 0;	
-	for(int i = 0; i < octaves; i++) 
-	{
-		float2 F = inoise(p * freq + offset + freq * 5, jitter);
-		sum += sqrt(F[0]) * amp;
+// // fractal sum, range -1.0 - 1.0
+// float fBm_F0(float4 p, int octaves)
+// {
+// 	float freq = _Frequency, amp = 0.5;
+// 	float sum = 0;	
+// 	for(int i = 0; i < octaves; i++) 
+// 	{
+// 		float2 F = inoise(p * freq, _Jitter) * amp;
 		
-		freq *= lacunarity;
-		amp *= persistance;
-	}
-	return sum;
-}
+// 		sum += 0.1 + sqrt(F[0]);
+		
+// 		freq *= _Lacunarity;
+// 		amp *= _Gain;
+// 	}
+// 	return sum;
+// }
 
-float fBm_F1_F0(float4 p, float offset, int octaves, float frequency, float lacunarity, float persistance, float jitter)
-{
-	float freq = frequency, amp = 0.5;
-	float sum = 0;	
-	for(int i = 0; i < octaves; i++) 
-	{
-		float2 F = inoise(p * freq + offset + freq * 5, jitter);
-		sum += (sqrt(F[1]) - sqrt(F[0])) * amp;
+// float fBm_F1_F0(float4 p, int octaves)
+// {
+// 	float freq = _Frequency, amp = 0.5;
+// 	float sum = 0;	
+// 	for(int i = 0; i < octaves; i++) 
+// 	{
+// 		float2 F = inoise(p * freq, _Jitter) * amp;
 		
-		freq *= lacunarity;
-		amp *= persistance;
-	}
-	return sum;
-}
+// 		sum += 0.1 + sqrt(F[1]) - sqrt(F[0]);
+		
+// 		freq *= _Lacunarity;
+// 		amp *= _Gain;
+// 	}
+// 	return sum;
+// }
