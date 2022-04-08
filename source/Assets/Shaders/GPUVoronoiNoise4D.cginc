@@ -73,15 +73,17 @@ float2 inoise(float4 P, float jitter)
 }
 
 // fractal sum, range -1.0 - 1.0
-float fBm_F0(float4 p, int octaves, float frequency, float lacunarity, float persistance, float jitter)
+float fBm_F0(float4 p, float offset, int octaves, float frequency, float lacunarity, float persistance, float jitter)
 {
 	float freq = frequency, amp = 0.5;
 	float sum = 0;	
 	for(int i = 0; i < octaves; i++) 
 	{
-		float2 F = inoise(p * freq, jitter) * amp;
-		
-		sum += 0.1 + sqrt(F[0]);
+		// float2 F = inoise(p * freq + offset + freq * 5, jitter) * amp;
+		// sum += 0.1 + sqrt(F[0]);
+
+		float2 F = inoise(p * freq + offset + freq * 5, jitter);
+		sum += sqrt(F[0]) * amp;
 		
 		freq *= lacunarity;
 		amp *= persistance;
@@ -89,15 +91,17 @@ float fBm_F0(float4 p, int octaves, float frequency, float lacunarity, float per
 	return sum;
 }
 
-float fBm_F1_F0(float4 p, int octaves, float frequency, float lacunarity, float persistance, float jitter)
+float fBm_F1_F0(float4 p, float offset, int octaves, float frequency, float lacunarity, float persistance, float jitter)
 {
 	float freq = frequency, amp = 0.5;
 	float sum = 0;	
 	for(int i = 0; i < octaves; i++) 
 	{
-		float2 F = inoise(p * freq, jitter) * amp;
-		
-		sum += 0.1 + sqrt(F[1]) - sqrt(F[0]);
+		// float2 F = inoise(p * freq + offset + freq * 5, jitter) * amp;
+		// sum += 0.1 + sqrt(F[1]) - sqrt(F[0]);
+
+		float2 F = inoise(p * freq + offset + freq * 5, jitter);
+		sum += (sqrt(F[1]) - sqrt(F[0])) * amp;
 		
 		freq *= lacunarity;
 		amp *= persistance;

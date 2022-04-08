@@ -1,4 +1,4 @@
-﻿// This shader is meant to generate a Voronoi noise texture so we can Blit it
+// This shader is meant to generate a Voronoi noise texture so we can Blit it
 // into a render texture and save it on a png. Since it's on a shader, it uses
 // the GPU and therefore is much faster than the CPU. You can use it as a
 // reference on how to use it on a realtime shader for your game.
@@ -18,8 +18,7 @@ Shader "Editor/VoronoiNoiseGenerator" {
 		_Jitter ("Jitter", Range(0, 1)) = 1
 
 		[Header(Noise Modifiers)]
-		_Scale ("Scale", Float) = 1
-		_Offset ("Offset", Float) = 0
+		[HideInInspector] _NormFactor ("Normalization Factor", Float) = 1
 		_RangeMin ("Range Min", Float) = 0
 		_RangeMax ("Range Max", Float) = 1
 		_Power ("Power", Range(1, 8)) = 1
@@ -39,6 +38,8 @@ Shader "Editor/VoronoiNoiseGenerator" {
 			#pragma fragment frag
 
 			#include "UnityCG.cginc"
+
+			// Change this line to have it pointing to the right file.
 			#include "Assets/Shaders/GPUVoronoiNoise4D.cginc"
 
 			struct appdata {
@@ -53,7 +54,7 @@ Shader "Editor/VoronoiNoiseGenerator" {
 
 			float _Variation;
 			float _Octaves, _Frequency, _Lacunarity, _Persistance, _Jitter;
-			float _Scale, _Offset, _RangeMin, _RangeMax, _Power;
+			float _NormFactor, _RangeMin, _RangeMax, _Power;
 
 			float4 TorusMapping (float2 i) {
 				float4 o = 0;
@@ -61,7 +62,6 @@ Shader "Editor/VoronoiNoiseGenerator" {
 				o.y = cos(i.x * UNITY_TWO_PI);
 				o.z = sin(i.y * UNITY_TWO_PI);
 				o.w = cos(i.y * UNITY_TWO_PI);
-				o += _Variation;
 				return o;
 			}
 
@@ -77,14 +77,18 @@ Shader "Editor/VoronoiNoiseGenerator" {
 				float noise = 0;
 
 				#ifdef _COMBINATION_ONE
-					noise = fBm_F0(coords, _Octaves, _Frequency, _Lacunarity, _Persistance, _Jitter);
+					noise = fBm_F0(
+						coords, _Variation, _Octaves, _Frequency,
+						_Lacunarity, _Persistance, _Jitter);
 				#endif
 
 				#ifdef _COMBINATION_TWO
-					noise = fBm_F1_F0(coords, _Octaves, _Frequency, _Lacunarity, _Persistance, _Jitter);
+					noise = fBm_F1_F0(
+						coords, _Variation, _Octaves, _Frequency,
+						_Lacunarity, _Persistance, _Jitter);
 				#endif
 			
-				noise = noise * _Scale + _Offset;
+				noise = noise / _NormFactor;
 				noise = (noise - _RangeMin) / (_RangeMax - _RangeMin);
 				noise = saturate(noise);
 

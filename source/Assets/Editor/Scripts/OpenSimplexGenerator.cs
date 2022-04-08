@@ -78,6 +78,8 @@ public class OpenSimplexGenerator : EditorWindow {
 
         SetSeeds(_seed);
         _preview = GenerateTexture(192, 192);
+
+        this.minSize = new Vector2(300, 650);
     }
 
     private void OnDisable() {
@@ -122,24 +124,28 @@ public class OpenSimplexGenerator : EditorWindow {
         }
 
         // Noise settings.
-        GUILayout.Space(10);
-        GUILayout.Label("Noise Settings", EditorStyles.boldLabel);
         EditorGUI.BeginChangeCheck();
         propFrequency.floatValue = EditorGUILayout.FloatField(
             "Frequency", propFrequency.floatValue);
+        
+        GUILayout.Space(16);
+        GUILayout.Label("Fractal Settings", EditorStyles.boldLabel);
         propOctaves.intValue = EditorGUILayout.IntSlider(
             "Octaves", propOctaves.intValue, 1, 9);
         propPersistance.floatValue = EditorGUILayout.Slider(
             "Persistance", propPersistance.floatValue, 0f, 1f);
         propLacunarity.floatValue = EditorGUILayout.Slider(
             "Lacunarity", propLacunarity.floatValue, 0.1f, 4.0f);
+        
+        GUILayout.Space(16);
+        GUILayout.Label("Modifiers", EditorStyles.boldLabel);
         EditorGUILayout.LabelField(
             "Range:", _rangeMin.ToString() + " to " + _rangeMax.ToString());
         EditorGUILayout.MinMaxSlider(ref _rangeMin, ref _rangeMax, 0f, 1f);
         propRangeMin.floatValue = _rangeMin;
         propRangeMax.floatValue = _rangeMax;
         propPower.floatValue = EditorGUILayout.Slider(
-            "Power", propPower.floatValue, 1f, 8f);
+            "Interpolation Power", propPower.floatValue, 1f, 8f);
         propInverted.boolValue = EditorGUILayout.Toggle(
             "Inverted", propInverted.boolValue);
         if (EditorGUI.EndChangeCheck()) {
@@ -149,7 +155,7 @@ public class OpenSimplexGenerator : EditorWindow {
         }
 
         // Texture settings. They don't cause the preview to change.
-        GUILayout.Space(10);
+        GUILayout.Space(32);
         GUILayout.Label("Target File Settings", EditorStyles.boldLabel);
         EditorGUI.BeginChangeCheck();
         propResolution.vector2IntValue = EditorGUILayout.Vector2IntField(
@@ -164,10 +170,10 @@ public class OpenSimplexGenerator : EditorWindow {
 
         // Draw preview texture.
         GUILayout.Space(10);
-        EditorGUI.DrawPreviewTexture(new Rect(32, 330, 192, 192), _preview);
+        EditorGUI.DrawPreviewTexture(new Rect(32, 380, 192, 192), _preview);
 
         // Save button.
-        GUILayout.Space(256);
+        GUILayout.Space(236);
         if (GUILayout.Button("Save Texture")) {
             Texture2D tex = GenerateTexture(_resolution.x, _resolution.y);
             byte[] data = tex.EncodeToPNG();
@@ -198,15 +204,15 @@ public class OpenSimplexGenerator : EditorWindow {
             for (int j = 0; j < height; j++) {
                 float sample = 0f;
                 float amplitude = 1f;
-                float frequency = 1f;
+                float frequency = _frequency;
 
                 for (int k = 0; k < _octaves; k++) {
                     float iAngle = i * 2f * Mathf.PI / width;
                     float jAngle = j * 2f * Mathf.PI / height;
-                    double nx = _frequency * Mathf.Sin(iAngle) / frequency;
-                    double ny = _frequency * Mathf.Cos(iAngle) / frequency;
-                    double nz = _frequency * Mathf.Sin(jAngle) / frequency;
-                    double nw = _frequency * Mathf.Cos(jAngle) / frequency;
+                    double nx = frequency * Mathf.Sin(iAngle);
+                    double ny = frequency * Mathf.Cos(iAngle);
+                    double nz = frequency * Mathf.Sin(jAngle);
+                    double nw = frequency * Mathf.Cos(jAngle);
                     float noise = OpenSimplex2S.Noise4_Fallback(
                         _seeds[k], nx, ny, nz, nw);
                     sample += noise * amplitude;

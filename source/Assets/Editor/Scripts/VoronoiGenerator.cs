@@ -23,8 +23,6 @@ public class VoronoiGenerator : EditorWindow {
     [SerializeField] float _persistance;
     [SerializeField] float _lacunarity;
     [SerializeField] float _jitter;
-    [SerializeField] float _scale;
-    [SerializeField] float _offset;
     [SerializeField] float _rangeMin;
     [SerializeField] float _rangeMax;
     [SerializeField] float _power;
@@ -40,8 +38,6 @@ public class VoronoiGenerator : EditorWindow {
     SerializedProperty propPersistance;
     SerializedProperty propLacunarity;
     SerializedProperty propJitter;
-    SerializedProperty propScale;
-    SerializedProperty propOffset;
     SerializedProperty propRangeMin;
     SerializedProperty propRangeMax;
     SerializedProperty propPower;
@@ -61,8 +57,6 @@ public class VoronoiGenerator : EditorWindow {
         propPersistance = so.FindProperty("_persistance");
         propLacunarity = so.FindProperty("_lacunarity");
         propJitter = so.FindProperty("_jitter");
-        propScale = so.FindProperty("_scale");
-        propOffset = so.FindProperty("_offset");
         propRangeMin = so.FindProperty("_rangeMin");
         propRangeMax = so.FindProperty("_rangeMax");
         propPower = so.FindProperty("_power");
@@ -84,10 +78,6 @@ public class VoronoiGenerator : EditorWindow {
             "TOOL_VORONOIGENERATOR_lacunarity", 2f);
         _jitter = EditorPrefs.GetFloat(
             "TOOL_VORONOIGENERATOR_jitter", 1f);
-        _scale = EditorPrefs.GetFloat(
-            "TOOL_VORONOIGENERATOR_scale", 1f);
-        _offset = EditorPrefs.GetFloat(
-            "TOOL_VORONOIGENERATOR_offset", 0f);
         _rangeMin = EditorPrefs.GetFloat(
             "TOOL_VORONOIGENERATOR_rangeMin", 0f);
         _rangeMax = EditorPrefs.GetFloat(
@@ -106,6 +96,8 @@ public class VoronoiGenerator : EditorWindow {
         _material = new Material(Shader.Find("Editor/VoronoiNoiseGenerator"));
         UpdateMaterial();
         _preview = GeneratePreview(192, 192);
+
+        this.minSize = new Vector2(300, 700);
     }
 
     private void OnDisable () {
@@ -123,10 +115,6 @@ public class VoronoiGenerator : EditorWindow {
             "TOOL_VORONOIGENERATOR_lacunarity", _lacunarity);
         EditorPrefs.SetFloat(
             "TOOL_VORONOIGENERATOR_jitter", _jitter);
-        EditorPrefs.SetFloat(
-            "TOOL_VORONOIGENERATOR_scale", _scale);
-        EditorPrefs.SetFloat(
-            "TOOL_VORONOIGENERATOR_offset", _offset);
         EditorPrefs.SetFloat(
             "TOOL_VORONOIGENERATOR_rangeMin", _rangeMin);
         EditorPrefs.SetFloat(
@@ -147,44 +135,46 @@ public class VoronoiGenerator : EditorWindow {
         so.Update();
 
         // Noise settings.
-        GUILayout.Label("Noise Settings", EditorStyles.boldLabel);
         EditorGUI.BeginChangeCheck();
-        propVariation.floatValue = EditorGUILayout.FloatField(
-            "Variation", propVariation.floatValue);
         propCombination.intValue = (int)(CombinationMode)(
             EditorGUILayout.EnumPopup(
             "Combination Mode", (CombinationMode)propCombination.intValue));
+        propVariation.floatValue = EditorGUILayout.FloatField(
+            "Variation", propVariation.floatValue);
         propFrequency.floatValue = EditorGUILayout.FloatField(
             "Frequency", propFrequency.floatValue);
+        propJitter.floatValue = EditorGUILayout.Slider(
+            "Jitter", propJitter.floatValue, 0f, 1f);
+        
+        GUILayout.Space(16);
+        GUILayout.Label("Fractal Settings", EditorStyles.boldLabel);
         propOctaves.intValue = EditorGUILayout.IntSlider(
             "Octaves", propOctaves.intValue, 1, 9);
         propPersistance.floatValue = EditorGUILayout.Slider(
             "Persistance", propPersistance.floatValue, 0f, 1f);
         propLacunarity.floatValue = EditorGUILayout.Slider(
             "Lacunarity", propLacunarity.floatValue, 0.1f, 4.0f);
-        propScale.floatValue = EditorGUILayout.FloatField(
-            "Scale", propScale.floatValue);
-        propOffset.floatValue = EditorGUILayout.FloatField(
-            "Offset", propOffset.floatValue);
+
+        GUILayout.Space(16);
+        GUILayout.Label("Modifiers", EditorStyles.boldLabel);
         EditorGUILayout.LabelField(
             "Range:", _rangeMin.ToString() + " to " + _rangeMax.ToString());
         EditorGUILayout.MinMaxSlider(ref _rangeMin, ref _rangeMax, 0f, 1f);
         propRangeMin.floatValue = _rangeMin;
         propRangeMax.floatValue = _rangeMax;
         propPower.floatValue = EditorGUILayout.Slider(
-            "Power", propPower.floatValue, 1f, 8f);
+            "Interpolation Power", propPower.floatValue, 1f, 8f);
         propInverted.boolValue = EditorGUILayout.Toggle(
             "Inverted", propInverted.boolValue);
         if (EditorGUI.EndChangeCheck()) {
             so.ApplyModifiedProperties();
             _frequency = _frequency < 0f ? 0f : _frequency;
-            _scale = _scale < 0f ? 0f : _scale;
             UpdateMaterial();
             _preview = GeneratePreview(_preview.width, _preview.height);
         }
 
         // Texture settings. They don't cause the preview to change.
-        GUILayout.Space(10);
+        GUILayout.Space(32);
         GUILayout.Label("Target File Settings", EditorStyles.boldLabel);
         EditorGUI.BeginChangeCheck();
         propResolution.vector2IntValue = EditorGUILayout.Vector2IntField(
@@ -199,10 +189,10 @@ public class VoronoiGenerator : EditorWindow {
 
         // Draw preview texture.
         GUILayout.Space(10);
-        EditorGUI.DrawPreviewTexture(new Rect(32, 370, 192, 192), _preview);
+        EditorGUI.DrawPreviewTexture(new Rect(32, 424, 192, 192), _preview);
 
         // Save button.
-        GUILayout.Space(236);
+        GUILayout.Space(244);
         if (GUILayout.Button("Save Texture")) {
             Texture2D tex = GenerateTexture(_resolution.x, _resolution.y);
             byte[] data = tex.EncodeToPNG();
@@ -215,23 +205,31 @@ public class VoronoiGenerator : EditorWindow {
 
     private void UpdateMaterial () {
         _material.SetFloat("_Variation", _variation);
+
+        float normFactor = 0f;
+        for (int i = 0; i < _octaves; i++) {
+            normFactor += Mathf.Pow(_persistance, i);
+        }
         switch (_combination) {
             case CombinationMode.First:
                 _material.EnableKeyword("_COMBINATION_ONE");
                 _material.DisableKeyword("_COMBINATION_TWO");
+                normFactor *= 0.7f;
                 break;
             case CombinationMode.SecondMinusFirst:
                 _material.EnableKeyword("_COMBINATION_TWO");
                 _material.DisableKeyword("_COMBINATION_ONE");
+                normFactor *= 0.4f;
                 break;
         }
+        _material.SetFloat("_NormFactor", normFactor);
+
         _material.SetFloat("_Frequency", _frequency);
         _material.SetFloat("_Octaves", (float)_octaves);
         _material.SetFloat("_Persistance", _persistance);
         _material.SetFloat("_Lacunarity", _lacunarity);
         _material.SetFloat("_Jitter", _jitter);
-        _material.SetFloat("_Scale", _scale);
-        _material.SetFloat("_Offset", _offset);
+
         _material.SetFloat("_RangeMin", _rangeMin);
         _material.SetFloat("_RangeMax", _rangeMax);
         _material.SetFloat("_Power", _power);
@@ -243,6 +241,8 @@ public class VoronoiGenerator : EditorWindow {
                 _material.DisableKeyword("_INVERTED");
                 break;
         }
+
+        
     }
 
     private Texture2D GeneratePreview (int width, int height) {
