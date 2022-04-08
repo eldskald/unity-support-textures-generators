@@ -21,35 +21,35 @@ public class OpenSimplexGenerator : EditorWindow {
     [SerializeField] Vector2Int _resolution;
     [SerializeField] string _path;
 
-    SerializedObject so;
-    SerializedProperty propSeed;
-    SerializedProperty propFrequency;
-    SerializedProperty propOctaves;
-    SerializedProperty propPersistance;
-    SerializedProperty propLacunarity;
-    SerializedProperty propRangeMin;
-    SerializedProperty propRangeMax;
-    SerializedProperty propPower;
-    SerializedProperty propInverted;
-    SerializedProperty propResolution;
-    SerializedProperty propPath;
+    private SerializedObject _so;
+    private SerializedProperty _propSeed;
+    private SerializedProperty _propFrequency;
+    private SerializedProperty _propOctaves;
+    private SerializedProperty _propPersistance;
+    private SerializedProperty _propLacunarity;
+    private SerializedProperty _propRangeMin;
+    private SerializedProperty _propRangeMax;
+    private SerializedProperty _propPower;
+    private SerializedProperty _propInverted;
+    private SerializedProperty _propResolution;
+    private SerializedProperty _propPath;
 
     private long[] _seeds;
     private Texture2D _preview;
 
     private void OnEnable () {
-        so = new SerializedObject(this);
-        propSeed = so.FindProperty("_seed");
-        propFrequency = so.FindProperty("_frequency");
-        propOctaves = so.FindProperty("_octaves");
-        propPersistance = so.FindProperty("_persistance");
-        propLacunarity = so.FindProperty("_lacunarity");
-        propRangeMin = so.FindProperty("_rangeMin");
-        propRangeMax = so.FindProperty("_rangeMax");
-        propPower = so.FindProperty("_power");
-        propInverted = so.FindProperty("_inverted");
-        propResolution = so.FindProperty("_resolution");
-        propPath = so.FindProperty("_path");
+        _so = new SerializedObject(this);
+        _propSeed = _so.FindProperty("_seed");
+        _propFrequency = _so.FindProperty("_frequency");
+        _propOctaves = _so.FindProperty("_octaves");
+        _propPersistance = _so.FindProperty("_persistance");
+        _propLacunarity = _so.FindProperty("_lacunarity");
+        _propRangeMin = _so.FindProperty("_rangeMin");
+        _propRangeMax = _so.FindProperty("_rangeMax");
+        _propPower = _so.FindProperty("_power");
+        _propInverted = _so.FindProperty("_inverted");
+        _propResolution = _so.FindProperty("_resolution");
+        _propPath = _so.FindProperty("_path");
 
         _seed = EditorPrefs.GetInt(
             "TOOL_OPENSIMPLEXGENERATOR_seed", 0);
@@ -110,46 +110,46 @@ public class OpenSimplexGenerator : EditorWindow {
     }
 
     private void OnGUI () {
-        so.Update();
+        _so.Update();
 
         // Seeds. We need a different seed for each octave, which is why we
         // use a seeds array.
         EditorGUI.BeginChangeCheck();
-        propSeed.intValue = EditorGUILayout.IntField(
-            "Seed", propSeed.intValue);
+        _propSeed.intValue = EditorGUILayout.IntField(
+            "Seed", _propSeed.intValue);
         if (EditorGUI.EndChangeCheck()) {
-            SetSeeds(propSeed.intValue);
-            so.ApplyModifiedProperties();
+            SetSeeds(_propSeed.intValue);
+            _so.ApplyModifiedProperties();
             _preview = GenerateTexture(_preview.width, _preview.height);
         }
 
         // Noise settings.
         EditorGUI.BeginChangeCheck();
-        propFrequency.floatValue = EditorGUILayout.FloatField(
-            "Frequency", propFrequency.floatValue);
+        _propFrequency.floatValue = EditorGUILayout.FloatField(
+            "Frequency", _propFrequency.floatValue);
         
         GUILayout.Space(16);
         GUILayout.Label("Fractal Settings", EditorStyles.boldLabel);
-        propOctaves.intValue = EditorGUILayout.IntSlider(
-            "Octaves", propOctaves.intValue, 1, 9);
-        propPersistance.floatValue = EditorGUILayout.Slider(
-            "Persistance", propPersistance.floatValue, 0f, 1f);
-        propLacunarity.floatValue = EditorGUILayout.Slider(
-            "Lacunarity", propLacunarity.floatValue, 0.1f, 4.0f);
+        _propOctaves.intValue = EditorGUILayout.IntSlider(
+            "Octaves", _propOctaves.intValue, 1, 9);
+        _propPersistance.floatValue = EditorGUILayout.Slider(
+            "Persistance", _propPersistance.floatValue, 0f, 1f);
+        _propLacunarity.floatValue = EditorGUILayout.Slider(
+            "Lacunarity", _propLacunarity.floatValue, 0.1f, 4.0f);
         
         GUILayout.Space(16);
         GUILayout.Label("Modifiers", EditorStyles.boldLabel);
         EditorGUILayout.LabelField(
             "Range:", _rangeMin.ToString() + " to " + _rangeMax.ToString());
         EditorGUILayout.MinMaxSlider(ref _rangeMin, ref _rangeMax, 0f, 1f);
-        propRangeMin.floatValue = _rangeMin;
-        propRangeMax.floatValue = _rangeMax;
-        propPower.floatValue = EditorGUILayout.Slider(
-            "Interpolation Power", propPower.floatValue, 1f, 8f);
-        propInverted.boolValue = EditorGUILayout.Toggle(
-            "Inverted", propInverted.boolValue);
+        _propRangeMin.floatValue = _rangeMin;
+        _propRangeMax.floatValue = _rangeMax;
+        _propPower.floatValue = EditorGUILayout.Slider(
+            "Interpolation Power", _propPower.floatValue, 1f, 8f);
+        _propInverted.boolValue = EditorGUILayout.Toggle(
+            "Inverted", _propInverted.boolValue);
         if (EditorGUI.EndChangeCheck()) {
-            so.ApplyModifiedProperties();
+            _so.ApplyModifiedProperties();
             _frequency = _frequency < 0f ? 0f : _frequency;
             _preview = GenerateTexture(_preview.width, _preview.height);
         }
@@ -158,12 +158,12 @@ public class OpenSimplexGenerator : EditorWindow {
         GUILayout.Space(32);
         GUILayout.Label("Target File Settings", EditorStyles.boldLabel);
         EditorGUI.BeginChangeCheck();
-        propResolution.vector2IntValue = EditorGUILayout.Vector2IntField(
-            "Texture Resolution", propResolution.vector2IntValue);
-        propPath.stringValue = EditorGUILayout.TextField(
-            "File Path", propPath.stringValue);
+        _propResolution.vector2IntValue = EditorGUILayout.Vector2IntField(
+            "Texture Resolution", _propResolution.vector2IntValue);
+        _propPath.stringValue = EditorGUILayout.TextField(
+            "File Path", _propPath.stringValue);
         if (EditorGUI.EndChangeCheck()) {
-            so.ApplyModifiedProperties();
+            _so.ApplyModifiedProperties();
             _resolution.x = _resolution.x < 1 ? 1 : _resolution.x;
             _resolution.y = _resolution.y < 1 ? 1 : _resolution.y;
         }
