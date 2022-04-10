@@ -9,23 +9,16 @@ public class GradientGenerator : EditorWindow {
     [MenuItem("Tools/Support Textures Generators/Gradient Texture Generator")]
     public static void OpenWindow () => GetWindow<GradientGenerator>();
 
-    [SerializeField] Gradient _gradient;
-    [SerializeField] AnimationCurve _curve;
-    [SerializeField] Vector2Int _resolution;
-    [SerializeField] string _path;
-
-    SerializedObject _so;
-    SerializedProperty _propResolution;
-    SerializedProperty _propPath;
+    private Gradient _gradient;
+    private AnimationCurve _curve;
+    private Vector2Int _resolution;
+    private string _path;
 
      private void OnEnable () {
-        _so = new SerializedObject(this);
-        _propResolution = _so.FindProperty("_resolution");
-        _propPath = _so.FindProperty("_path");
-
         _gradient = new Gradient();
         _curve = new AnimationCurve();
 
+        // EditorPrefs to load settings when you last used it.
         _resolution.x = EditorPrefs.GetInt(
             "TOOL_GRADIENTGENERATOR_resolution_x", 128);
         _resolution.y = EditorPrefs.GetInt(
@@ -37,6 +30,8 @@ public class GradientGenerator : EditorWindow {
      }
 
      private void OnDisable () {
+
+        // EditorPrefs to save settings for when you next use it.
         EditorPrefs.SetInt(
             "TOOL_GRADIENTGENERATOR_resolution_x", _resolution.x);
         EditorPrefs.SetInt(
@@ -46,22 +41,21 @@ public class GradientGenerator : EditorWindow {
      }
 
      private void OnGUI () {
-         _so.Update();
-
         GUILayout.Space(16);
-        _gradient = EditorGUILayout.GradientField("Gradient", _gradient);
+        _gradient = EditorGUILayout.GradientField(
+            "Gradient", _gradient);
         GUILayout.Space(8);
-        _curve = EditorGUILayout.CurveField("Curve", _curve);
+        _curve = EditorGUILayout.CurveField(
+            "Curve", _curve);
 
         GUILayout.Space(32);
         GUILayout.Label("Target File Settings", EditorStyles.boldLabel);
         EditorGUI.BeginChangeCheck();
-        _propResolution.vector2IntValue = EditorGUILayout.Vector2IntField(
-            "Texture Resolution", _propResolution.vector2IntValue);
-        _propPath.stringValue = EditorGUILayout.TextField(
-            "File Path", _propPath.stringValue);
+        _resolution = EditorGUILayout.Vector2IntField(
+            "Texture Resolution", _resolution);
+        _path = EditorGUILayout.TextField(
+            "File Path", _path);
         if (EditorGUI.EndChangeCheck()) {
-            _so.ApplyModifiedProperties();
             _resolution.x = _resolution.x < 1 ? 1 : _resolution.x;
             _resolution.y = _resolution.y < 1 ? 1 : _resolution.y;
         }
