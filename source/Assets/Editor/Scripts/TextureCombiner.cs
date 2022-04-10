@@ -9,36 +9,20 @@ public class TextureCombiner : EditorWindow {
     [MenuItem("Tools/Support Textures Generators/Texture Combiner")]
     public static void OpenWindow () => GetWindow<TextureCombiner>();
 
-    [SerializeField] Texture2D _textureR;
-    [SerializeField] Texture2D _textureG;
-    [SerializeField] Texture2D _textureB;
-    [SerializeField] Texture2D _textureA;
-    [SerializeField] bool _normalize;
-    [SerializeField] Vector2Int _resolution;
-    [SerializeField] string _path;
-
-    private SerializedObject _so;
-    private SerializedProperty _propTexR;
-    private SerializedProperty _propTexG;
-    private SerializedProperty _propTexB;
-    private SerializedProperty _propTexA;
-    private SerializedProperty _propNormalize;
-    private SerializedProperty _propResolution;
-    private SerializedProperty _propPath;
+    private Texture2D _textureR;
+    private Texture2D _textureG;
+    private Texture2D _textureB;
+    private Texture2D _textureA;
+    private bool _normalize;
+    private Vector2Int _resolution;
+    private string _path;
 
     private Material _material;
     private Texture2D _preview;
 
     private void OnEnable () {
-        _so = new SerializedObject(this);
-        _propTexR = _so.FindProperty("_textureR");
-        _propTexG = _so.FindProperty("_textureG");
-        _propTexB = _so.FindProperty("_textureB");
-        _propTexA = _so.FindProperty("_textureA");
-        _propNormalize = _so.FindProperty("_normalize");
-        _propResolution = _so.FindProperty("_resolution");
-        _propPath = _so.FindProperty("_path");
 
+        // EditorPrefs to load settings when you last used it.
         _resolution.x = EditorPrefs.GetInt(
             "TOOL_TEXTURECOMBINER_resolution_x", 256);
         _resolution.y = EditorPrefs.GetInt(
@@ -53,6 +37,8 @@ public class TextureCombiner : EditorWindow {
     }
 
     private void OnDisable () {
+
+        // EditorPrefs to save settings for when you next use it.
         EditorPrefs.SetInt(
             "TOOL_TEXTURECOMBINER_resolution_x", _resolution.x);
         EditorPrefs.SetInt(
@@ -62,22 +48,20 @@ public class TextureCombiner : EditorWindow {
     }
 
     private void OnGUI () {
-        _so.Update();
 
         // Textures to be combined.
         EditorGUI.BeginChangeCheck();
-        _propTexR.objectReferenceValue = EditorGUILayout.ObjectField(
+        _textureR = (Texture2D)EditorGUILayout.ObjectField(
             "Texture R", _textureR, typeof(Texture), false);
-        _propTexG.objectReferenceValue = EditorGUILayout.ObjectField(
+        _textureG = (Texture2D)EditorGUILayout.ObjectField(
             "Texture G", _textureG, typeof(Texture), false);
-        _propTexB.objectReferenceValue = EditorGUILayout.ObjectField(
+        _textureB = (Texture2D)EditorGUILayout.ObjectField(
             "Texture B", _textureB, typeof(Texture), false);
-        _propTexA.objectReferenceValue = EditorGUILayout.ObjectField(
+        _textureA = (Texture2D)EditorGUILayout.ObjectField(
             "Texture A", _textureA, typeof(Texture), false);
-        _propNormalize.boolValue = EditorGUILayout.ToggleLeft(
+        _normalize = EditorGUILayout.ToggleLeft(
             "Normalize", _normalize);
         if (EditorGUI.EndChangeCheck()) {
-            _so.ApplyModifiedProperties();
             UpdateMaterial();
             _preview = GenerateTexture(_preview.width, _preview.height);
         }
@@ -86,12 +70,11 @@ public class TextureCombiner : EditorWindow {
         GUILayout.Space(32);
         GUILayout.Label("Target File Settings", EditorStyles.boldLabel);
         EditorGUI.BeginChangeCheck();
-        _propResolution.vector2IntValue = EditorGUILayout.Vector2IntField(
-            "Texture Resolution", _propResolution.vector2IntValue);
-        _propPath.stringValue = EditorGUILayout.TextField(
-            "File Path", _propPath.stringValue);
+        _resolution = EditorGUILayout.Vector2IntField(
+            "Texture Resolution", _resolution);
+        _path = EditorGUILayout.TextField(
+            "File Path", _path);
         if (EditorGUI.EndChangeCheck()) {
-            _so.ApplyModifiedProperties();
             _resolution.x = _resolution.x < 1 ? 1 : _resolution.x;
             _resolution.y = _resolution.y < 1 ? 1 : _resolution.y;
         }
@@ -157,7 +140,8 @@ public class TextureCombiner : EditorWindow {
             }
         }
 
-        Texture2D tex = new Texture2D(input.width, input.height);
+        Texture2D tex = new Texture2D(
+            input.width, input.height, TextureFormat.ARGB32, false);
         for (int i = 0; i < tex.width; i++) {
             for (int j = 0; j < tex.height; j++) {
                 Color inputCol = input.GetPixel(i, j);
