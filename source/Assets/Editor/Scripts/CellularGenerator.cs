@@ -6,7 +6,9 @@ using UnityEditor;
 
 public class CellularGenerator : EditorWindow {
 
-    [MenuItem("Tools/Support Textures Generators/Noise Generator: Cellular")]
+    [MenuItem(
+        "Tools/Support Textures Generators/Cellular Noise Generator",
+        false, 102)]
     public static void OpenWindow () => GetWindow<CellularGenerator>();
 
     private enum CombinationMode {

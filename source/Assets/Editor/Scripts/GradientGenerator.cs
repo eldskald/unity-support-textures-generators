@@ -6,7 +6,9 @@ using UnityEditor;
 
 public class GradientGenerator : EditorWindow {
 
-    [MenuItem("Tools/Support Textures Generators/Gradient Texture Generator")]
+    [MenuItem(
+        "Tools/Support Textures Generators/Gradient Texture Generator",
+        false, 103)]
     public static void OpenWindow () => GetWindow<GradientGenerator>();
 
     private Gradient _gradient;

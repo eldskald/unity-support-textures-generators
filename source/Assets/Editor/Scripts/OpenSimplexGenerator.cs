@@ -6,7 +6,9 @@ using UnityEditor;
 
 public class OpenSimplexGenerator : EditorWindow {
 
-    [MenuItem("Tools/Support Textures Generators/Noise Generator: Open Simplex")]
+    [MenuItem(
+        "Tools/Support Textures Generators/Open Simplex Noise Generator",
+        false, 101)]
     public static void OpenWindow () => GetWindow<OpenSimplexGenerator>();
 
     private bool _seamless;

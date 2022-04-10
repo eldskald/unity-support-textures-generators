@@ -6,7 +6,8 @@ using UnityEditor;
 
 public class TextureCombiner : EditorWindow {
     
-    [MenuItem("Tools/Support Textures Generators/Texture Combiner")]
+    [MenuItem("Tools/Support Textures Generators/Texture Combiner",
+    false, 120)]
     public static void OpenWindow () => GetWindow<TextureCombiner>();
 
     private Texture2D _textureR;
