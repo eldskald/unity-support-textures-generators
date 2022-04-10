@@ -6,7 +6,7 @@ using UnityEditor;
 
 public class CellularGenerator : EditorWindow {
 
-    [MenuItem("Tools/Support Textures Generators/Cellular Noise Generator")]
+    [MenuItem("Tools/Support Textures Generators/Noise Generator: Cellular")]
     public static void OpenWindow () => GetWindow<CellularGenerator>();
 
     private enum CombinationMode {
@@ -14,54 +14,26 @@ public class CellularGenerator : EditorWindow {
         SecondMinusFirst = 1
     }
 
-    [SerializeField] float _variation;
-    [SerializeField] CombinationMode _combination;
-    [SerializeField] float _frequency;
-    [SerializeField] int _octaves;
-    [SerializeField] float _persistance;
-    [SerializeField] float _lacunarity;
-    [SerializeField] float _jitter;
-    [SerializeField] float _rangeMin;
-    [SerializeField] float _rangeMax;
-    [SerializeField] float _power;
-    [SerializeField] bool _inverted;
-    [SerializeField] Vector2Int _resolution;
-    [SerializeField] string _path;
-    
-    private SerializedObject _so;
-    private SerializedProperty _propVariation;
-    private SerializedProperty _propCombination;
-    private SerializedProperty _propFrequency;
-    private SerializedProperty _propOctaves;
-    private SerializedProperty _propPersistance;
-    private SerializedProperty _propLacunarity;
-    private SerializedProperty _propJitter;
-    private SerializedProperty _propRangeMin;
-    private SerializedProperty _propRangeMax;
-    private SerializedProperty _propPower;
-    private SerializedProperty _propInverted;
-    private SerializedProperty _propResolution;
-    private SerializedProperty _propPath;
+    private float _variation;
+    private CombinationMode _combination;
+    private float _frequency;
+    private int _octaves;
+    private float _persistance;
+    private float _lacunarity;
+    private float _jitter;
+    private float _rangeMin;
+    private float _rangeMax;
+    private float _power;
+    private bool _inverted;
+    private Vector2Int _resolution;
+    private string _path;
 
     private Material _material;
     private Texture2D _preview;
 
     private void OnEnable () {
-        _so = new SerializedObject(this);
-        _propVariation = _so.FindProperty("_variation");
-        _propCombination = _so.FindProperty("_combination");
-        _propFrequency = _so.FindProperty("_frequency");
-        _propOctaves = _so.FindProperty("_octaves");
-        _propPersistance = _so.FindProperty("_persistance");
-        _propLacunarity = _so.FindProperty("_lacunarity");
-        _propJitter = _so.FindProperty("_jitter");
-        _propRangeMin = _so.FindProperty("_rangeMin");
-        _propRangeMax = _so.FindProperty("_rangeMax");
-        _propPower = _so.FindProperty("_power");
-        _propInverted = _so.FindProperty("_inverted");
-        _propResolution = _so.FindProperty("_resolution");
-        _propPath = _so.FindProperty("_path");
 
+        // EditorPrefs to load settings when you last used it.
         _variation = EditorPrefs.GetFloat(
             "TOOL_CELLULARGENERATOR_variation", 0f);
         _combination = (CombinationMode)EditorPrefs.GetInt(
@@ -99,6 +71,8 @@ public class CellularGenerator : EditorWindow {
     }
 
     private void OnDisable () {
+
+        // EditorPrefs to save settings for when you next use it.
         EditorPrefs.SetFloat(
             "TOOL_CELLULARGENERATOR_variation", _variation);
         EditorPrefs.SetInt(
@@ -130,42 +104,39 @@ public class CellularGenerator : EditorWindow {
     }
 
     private void OnGUI () {
-        _so.Update();
 
         // Noise settings.
         EditorGUI.BeginChangeCheck();
-        _propCombination.intValue = (int)(CombinationMode)(
-            EditorGUILayout.EnumPopup(
-            "Combination Mode", (CombinationMode)_propCombination.intValue));
-        _propVariation.floatValue = EditorGUILayout.FloatField(
-            "Variation", _propVariation.floatValue);
-        _propFrequency.floatValue = EditorGUILayout.FloatField(
-            "Frequency", _propFrequency.floatValue);
-        _propJitter.floatValue = EditorGUILayout.Slider(
-            "Jitter", _propJitter.floatValue, 0f, 1f);
+        _combination = (CombinationMode)(EditorGUILayout.EnumPopup(
+            "Combination Mode", (CombinationMode)_combination));
+        _variation = EditorGUILayout.FloatField(
+            "Variation", _variation);
+        _frequency = EditorGUILayout.FloatField(
+            "Frequency", _frequency);
+        _jitter = EditorGUILayout.Slider(
+            "Jitter", _jitter, 0f, 1f);
         
         GUILayout.Space(16);
         GUILayout.Label("Fractal Settings", EditorStyles.boldLabel);
-        _propOctaves.intValue = EditorGUILayout.IntSlider(
-            "Octaves", _propOctaves.intValue, 1, 9);
-        _propPersistance.floatValue = EditorGUILayout.Slider(
-            "Persistance", _propPersistance.floatValue, 0f, 1f);
-        _propLacunarity.floatValue = EditorGUILayout.Slider(
-            "Lacunarity", _propLacunarity.floatValue, 0.1f, 4.0f);
+        _octaves = EditorGUILayout.IntSlider(
+            "Octaves", _octaves, 1, 9);
+        _persistance = EditorGUILayout.Slider(
+            "Persistance", _persistance, 0f, 1f);
+        _lacunarity = EditorGUILayout.Slider(
+            "Lacunarity", _lacunarity, 0.1f, 4.0f);
 
         GUILayout.Space(16);
         GUILayout.Label("Modifiers", EditorStyles.boldLabel);
         EditorGUILayout.LabelField(
             "Range:", _rangeMin.ToString() + " to " + _rangeMax.ToString());
         EditorGUILayout.MinMaxSlider(ref _rangeMin, ref _rangeMax, 0f, 1f);
-        _propRangeMin.floatValue = _rangeMin;
-        _propRangeMax.floatValue = _rangeMax;
-        _propPower.floatValue = EditorGUILayout.Slider(
-            "Interpolation Power", _propPower.floatValue, 1f, 8f);
-        _propInverted.boolValue = EditorGUILayout.Toggle(
-            "Inverted", _propInverted.boolValue);
+
+        _power = EditorGUILayout.Slider(
+            "Interpolation Power", _power, 1f, 8f);
+        _inverted = EditorGUILayout.Toggle(
+            "Inverted", _inverted);
+        
         if (EditorGUI.EndChangeCheck()) {
-            _so.ApplyModifiedProperties();
             _variation = _variation < 0f ? 0f : _variation;
             _frequency = _frequency < 0f ? 0f : _frequency;
             UpdateMaterial();
@@ -176,12 +147,11 @@ public class CellularGenerator : EditorWindow {
         GUILayout.Space(32);
         GUILayout.Label("Target File Settings", EditorStyles.boldLabel);
         EditorGUI.BeginChangeCheck();
-        _propResolution.vector2IntValue = EditorGUILayout.Vector2IntField(
-            "Texture Resolution", _propResolution.vector2IntValue);
-        _propPath.stringValue = EditorGUILayout.TextField(
-            "File Path", _propPath.stringValue);
+        _resolution = EditorGUILayout.Vector2IntField(
+            "Texture Resolution", _resolution);
+        _path = EditorGUILayout.TextField(
+            "File Path", _path);
         if (EditorGUI.EndChangeCheck()) {
-            _so.ApplyModifiedProperties();
             _resolution.x = _resolution.x < 1 ? 1 : _resolution.x;
             _resolution.y = _resolution.y < 1 ? 1 : _resolution.y;
         }
