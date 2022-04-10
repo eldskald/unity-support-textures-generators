@@ -9,6 +9,7 @@ public class OpenSimplexGenerator : EditorWindow {
     [MenuItem("Tools/Support Textures Generators/Noise Generator: Open Simplex")]
     public static void OpenWindow () => GetWindow<OpenSimplexGenerator>();
 
+    private bool _seamless;
     private int _seed;
     private float _frequency;
     private int _octaves;
@@ -25,6 +26,10 @@ public class OpenSimplexGenerator : EditorWindow {
     private Texture2D _preview;
 
     private void OnEnable () {
+
+        // EditorPrefs to load settings when you last used it.
+        _seamless = EditorPrefs.GetBool(
+            "TOOL_OPENSIMPLEXGENERATOR_seamless", true);
         _seed = EditorPrefs.GetInt(
             "TOOL_OPENSIMPLEXGENERATOR_seed", 0);
         _frequency = EditorPrefs.GetFloat(
@@ -53,10 +58,14 @@ public class OpenSimplexGenerator : EditorWindow {
         SetSeeds(_seed);
         _preview = GenerateTexture(192, 192);
 
-        this.minSize = new Vector2(300, 650);
+        this.minSize = new Vector2(300, 660);
     }
 
     private void OnDisable() {
+
+        // EditorPrefs to save settings for when you next use it.
+        EditorPrefs.SetBool(
+            "TOOL_OPENSIMPLEXGENERATOR_seamless", _seamless);
         EditorPrefs.SetInt(
             "TOOL_OPENSIMPLEXGENERATOR_seed", _seed);
         EditorPrefs.SetFloat(
@@ -88,6 +97,8 @@ public class OpenSimplexGenerator : EditorWindow {
         // Seeds. We need a different seed for each octave, which is why we
         // use a seeds array.
         EditorGUI.BeginChangeCheck();
+        _seamless = EditorGUILayout.ToggleLeft(
+            "Seamless", _seamless);
         _seed = EditorGUILayout.IntField(
             "Seed", _seed);
         if (EditorGUI.EndChangeCheck()) {
@@ -116,7 +127,7 @@ public class OpenSimplexGenerator : EditorWindow {
 
         _power = EditorGUILayout.Slider(
             "Interpolation Power", _power, 1f, 8f);
-        _inverted = EditorGUILayout.Toggle(
+        _inverted = EditorGUILayout.ToggleLeft(
             "Inverted", _inverted);
 
         if (EditorGUI.EndChangeCheck()) {
@@ -139,7 +150,7 @@ public class OpenSimplexGenerator : EditorWindow {
 
         // Draw preview texture.
         GUILayout.Space(10);
-        EditorGUI.DrawPreviewTexture(new Rect(32, 380, 192, 192), _preview);
+        EditorGUI.DrawPreviewTexture(new Rect(32, 400, 192, 192), _preview);
 
         // Save button.
         GUILayout.Space(236);
@@ -161,6 +172,15 @@ public class OpenSimplexGenerator : EditorWindow {
         }
     }
 
+    private double[] TorusMapping (float x, float y) {
+        double[] map = new double[4];
+        map[0] = Mathf.Sin(2f * Mathf.PI * x);
+        map[1] = Mathf.Cos(2f * Mathf.PI * x);
+        map[2] = Mathf.Sin(2f * Mathf.PI * y);
+        map[3] = Mathf.Cos(2f * Mathf.PI * y);
+        return map;
+    }
+
     private Texture2D GenerateTexture (int width, int height) {
         float[,] values = new float[width, height];
         Texture2D tex = new Texture2D(width, height);
@@ -171,27 +191,36 @@ public class OpenSimplexGenerator : EditorWindow {
         float minValue = Mathf.Infinity;          // normalize values later.
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {
-                float sample = 0f;
+                float sum = 0f;
                 float amplitude = 1f;
                 float frequency = _frequency;
 
                 for (int k = 0; k < _octaves; k++) {
-                    float iAngle = i * 2f * Mathf.PI / width;
-                    float jAngle = j * 2f * Mathf.PI / height;
-                    double nx = frequency * Mathf.Sin(iAngle);
-                    double ny = frequency * Mathf.Cos(iAngle);
-                    double nz = frequency * Mathf.Sin(jAngle);
-                    double nw = frequency * Mathf.Cos(jAngle);
-                    float noise = OpenSimplex2S.Noise4_Fallback(
-                        _seeds[k], nx, ny, nz, nw);
-                    sample += noise * amplitude;
+                    float noise = 0f;
+                    if (_seamless) {
+                        double[] coords = TorusMapping(
+                            (float)i / (float)width, (float)j / (float)height);
+                        double nx = coords[0] * frequency;
+                        double ny = coords[1] * frequency;
+                        double nz = coords[2] * frequency;
+                        double nw = coords[3] * frequency;
+                        noise = OpenSimplex2S.Noise4_Fallback(
+                            _seeds[k], nx, ny, nz, nw);
+                    }
+                    else {
+                        double x = ((float)i / (float)width) * frequency * 5;
+                        double y = ((float)j / (float)height) * frequency * 5;
+                        noise = OpenSimplex2S.Noise2(_seeds[k], x, y);
+                    }   
+
+                    sum += noise * amplitude;
                     amplitude *= _persistance;
                     frequency *= _lacunarity;
                 }
 
-                values[i,j] = sample;
-                maxValue = sample > maxValue ? sample : maxValue;
-                minValue = sample < minValue ? sample : minValue;
+                values[i,j] = sum;
+                maxValue = sum > maxValue ? sum : maxValue;
+                minValue = sum < minValue ? sum : minValue;
             }
         }
 
