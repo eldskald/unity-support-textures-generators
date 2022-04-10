@@ -8,6 +8,7 @@ Shader "Editor/CellularNoiseGenerator" {
 	Properties {
 
 		_Variation ("Variation", Float) = 0
+		[Toggle(_SEAMLESS)] _Seamless ("Seamless", Float) = 1
 		[KeywordEnum(One, Two)] _Combination ("Combination", Float) = 0
 
 		[Header(Noise Properties)]
@@ -31,8 +32,9 @@ Shader "Editor/CellularNoiseGenerator" {
 
 			CGPROGRAM
 
+			#pragma multi_compile _ _SEAMLESS
+			#pragma multi_compile _COMBINATION_ONE _COMBINATION_TWO
 			#pragma multi_compile _ _INVERTED
-			#pragma multi_compile _COMBINATION_ONE _COMBINATION_TWO	
 
 			#pragma vertex vert
 			#pragma fragment frag
@@ -73,13 +75,24 @@ Shader "Editor/CellularNoiseGenerator" {
 			}
 
 			float4 frag (v2f i) : SV_TARGET {
-				float4 coords = TorusMapping(i.uv);
+				#ifdef _SEAMLESS
+					float4 coords = TorusMapping(i.uv);
+				#else
+					float4 coords = float4(i.uv * 5, 0, 0);
+				#endif
 
 				float noise = 0;
 				float freq = _Frequency;
 				float amp = 0.5;	
 				for (int i = 0; i < _Octaves; i++) {
-					float4 p = coords * freq + _Variation + i + freq * 5;
+					float4 p = coords * freq;
+
+					#ifdef _SEAMLESS
+						p += _Variation + i + freq * 5;
+					#else
+						p += float4(0, 0, 0, _Variation + i);
+					#endif
+
 					float2 F = inoise(p, _Jitter);
 
 					#ifdef _COMBINATION_ONE

@@ -14,6 +14,7 @@ public class CellularGenerator : EditorWindow {
         SecondMinusFirst = 1
     }
 
+    private bool _seamless;
     private float _variation;
     private CombinationMode _combination;
     private float _frequency;
@@ -34,6 +35,8 @@ public class CellularGenerator : EditorWindow {
     private void OnEnable () {
 
         // EditorPrefs to load settings when you last used it.
+        _seamless = EditorPrefs.GetBool(
+            "TOOL_CELLULARGENERATOR_seamless", true);
         _variation = EditorPrefs.GetFloat(
             "TOOL_CELLULARGENERATOR_variation", 0f);
         _combination = (CombinationMode)EditorPrefs.GetInt(
@@ -67,12 +70,14 @@ public class CellularGenerator : EditorWindow {
         UpdateMaterial();
         _preview = GeneratePreview(192, 192);
 
-        this.minSize = new Vector2(300, 700);
+        this.minSize = new Vector2(300, 710);
     }
 
     private void OnDisable () {
 
         // EditorPrefs to save settings for when you next use it.
+        EditorPrefs.SetBool(
+            "TOOL_CELLULARGENERATOR_seamless", _seamless);
         EditorPrefs.SetFloat(
             "TOOL_CELLULARGENERATOR_variation", _variation);
         EditorPrefs.SetInt(
@@ -107,6 +112,8 @@ public class CellularGenerator : EditorWindow {
 
         // Noise settings.
         EditorGUI.BeginChangeCheck();
+        _seamless = EditorGUILayout.ToggleLeft(
+            "Seamless", _seamless);
         _combination = (CombinationMode)(EditorGUILayout.EnumPopup(
             "Combination Mode", (CombinationMode)_combination));
         _variation = EditorGUILayout.FloatField(
@@ -158,7 +165,7 @@ public class CellularGenerator : EditorWindow {
 
         // Draw preview texture.
         GUILayout.Space(10);
-        EditorGUI.DrawPreviewTexture(new Rect(32, 424, 192, 192), _preview);
+        EditorGUI.DrawPreviewTexture(new Rect(32, 450, 192, 192), _preview);
 
         // Save button.
         GUILayout.Space(244);
@@ -173,6 +180,15 @@ public class CellularGenerator : EditorWindow {
     }
 
     private void UpdateMaterial () {
+        switch (_seamless) {
+            case true:
+                _material.EnableKeyword("_SEAMLESS");
+                break;
+            case false:
+                _material.DisableKeyword("_SEAMLESS");
+                break;
+        }
+
         _material.SetFloat("_Variation", _variation);
 
         float normFactor = 0f;
@@ -210,8 +226,6 @@ public class CellularGenerator : EditorWindow {
                 _material.DisableKeyword("_INVERTED");
                 break;
         }
-
-        
     }
 
     private Texture2D GeneratePreview (int width, int height) {
