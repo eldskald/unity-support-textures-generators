@@ -62,7 +62,8 @@ public class GradientGenerator : EditorWindow {
 
         GUILayout.Space(32);
         if (GUILayout.Button("Save from Gradient")) {
-            Texture2D tex = new Texture2D(_resolution.x, _resolution.y);
+            Texture2D tex = new Texture2D(
+                _resolution.x, _resolution.y, TextureFormat.ARGB32, false);
             for (int i = 0; i < _resolution.x; i++) {
                 Color value = _gradient.Evaluate(i / (float)_resolution.x);
                 for (int j = 0; j < _resolution.y; j++) {
@@ -78,7 +79,8 @@ public class GradientGenerator : EditorWindow {
 
         GUILayout.Space(8);
         if (GUILayout.Button("Save from Curve")) {
-            Texture2D tex = new Texture2D(_resolution.x, _resolution.y);
+            Texture2D tex = new Texture2D(
+                _resolution.x, _resolution.y, TextureFormat.ARGB32, false);
             for (int i = 0; i < _resolution.x; i++) {
                 float value = _curve.Evaluate(i / (float)_resolution.x);
                 value = Mathf.Clamp01(value);
