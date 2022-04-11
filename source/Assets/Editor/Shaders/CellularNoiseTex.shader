@@ -10,6 +10,7 @@ Shader "Editor/CellularNoiseGenerator" {
 		_Variation ("Variation", Float) = 0
 		[Toggle(_SEAMLESS)] _Seamless ("Seamless", Float) = 1
 		[KeywordEnum(One, Two)] _Combination ("Combination", Float) = 0
+		[Toggle(_SQUARED_DISTANCE)] _SquaredDistance ("Squared Distance", Float) = 0
 
 		[Header(Noise Properties)]
 		_Frequency ("Frequency", Float) = 1
@@ -34,6 +35,7 @@ Shader "Editor/CellularNoiseGenerator" {
 
 			#pragma multi_compile _ _SEAMLESS
 			#pragma multi_compile _COMBINATION_ONE _COMBINATION_TWO
+			#pragma multi_compile _ _SQUARED_DISTANCE
 			#pragma multi_compile _ _INVERTED
 
 			#pragma vertex vert
@@ -96,11 +98,19 @@ Shader "Editor/CellularNoiseGenerator" {
 					float2 F = inoise(p, _Jitter);
 
 					#ifdef _COMBINATION_ONE
-						noise += sqrt(F.x) * amp;
+						#ifdef _SQUARED_DISTANCE
+							noise += F.x * amp;
+						#else
+							noise += sqrt(F.x) * amp;
+						#endif
 					#endif
 
 					#ifdef _COMBINATION_TWO
-						noise += (sqrt(F.y) - sqrt(F.x)) * amp;
+						#ifdef _SQUARED_DISTANCE
+							noise += (F.y - F.x) * amp;
+						#else
+							noise += (sqrt(F.y) - sqrt(F.x)) * amp;
+						#endif
 					#endif
 					
 					freq *= _Lacunarity;

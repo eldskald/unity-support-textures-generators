@@ -17,8 +17,9 @@ public class CellularGenerator : EditorWindow {
     }
 
     private bool _seamless;
-    private float _variation;
     private CombinationMode _combination;
+    private bool _squaredDistance;
+    private float _variation;
     private float _frequency;
     private int _octaves;
     private float _persistance;
@@ -39,10 +40,12 @@ public class CellularGenerator : EditorWindow {
         // EditorPrefs to load settings when you last used it.
         _seamless = EditorPrefs.GetBool(
             "TOOL_CELLULARGENERATOR_seamless", true);
-        _variation = EditorPrefs.GetFloat(
-            "TOOL_CELLULARGENERATOR_variation", 0f);
         _combination = (CombinationMode)EditorPrefs.GetInt(
             "TOOL_CELLULARGENERATOR_combination", 0);
+        _squaredDistance = EditorPrefs.GetBool(
+            "TOOL_CELLULARGENERATOR_squaredDistance", false);
+        _variation = EditorPrefs.GetFloat(
+            "TOOL_CELLULARGENERATOR_variation", 0f);
         _frequency = EditorPrefs.GetFloat(
             "TOOL_CELLULARGENERATOR_frequency", 1f);
         _octaves = EditorPrefs.GetInt(
@@ -72,7 +75,7 @@ public class CellularGenerator : EditorWindow {
         UpdateMaterial();
         _preview = GeneratePreview(192, 192);
 
-        this.minSize = new Vector2(300, 710);
+        this.minSize = new Vector2(300, 760);
     }
 
     private void OnDisable () {
@@ -80,10 +83,12 @@ public class CellularGenerator : EditorWindow {
         // EditorPrefs to save settings for when you next use it.
         EditorPrefs.SetBool(
             "TOOL_CELLULARGENERATOR_seamless", _seamless);
-        EditorPrefs.SetFloat(
-            "TOOL_CELLULARGENERATOR_variation", _variation);
         EditorPrefs.SetInt(
             "TOOL_CELLULARGENERATOR_combination", (int)_combination);
+        EditorPrefs.SetBool(
+            "TOOL_CELLULARGENERATOR_squaredDistance", _squaredDistance);
+        EditorPrefs.SetFloat(
+            "TOOL_CELLULARGENERATOR_variation", _variation);
         EditorPrefs.SetFloat(
             "TOOL_CELLULARGENERATOR_frequency", _frequency);
         EditorPrefs.SetInt(
@@ -116,8 +121,10 @@ public class CellularGenerator : EditorWindow {
         EditorGUI.BeginChangeCheck();
         _seamless = EditorGUILayout.ToggleLeft(
             "Seamless", _seamless);
-        _combination = (CombinationMode)(EditorGUILayout.EnumPopup(
-            "Combination Mode", (CombinationMode)_combination));
+        _combination = (CombinationMode)EditorGUILayout.EnumPopup(
+            "Combination Mode", (CombinationMode)_combination);
+        _squaredDistance = EditorGUILayout.ToggleLeft(
+            "Squared Distance", _squaredDistance);
         _variation = EditorGUILayout.FloatField(
             "Variation", _variation);
         _frequency = EditorGUILayout.FloatField(
@@ -167,10 +174,10 @@ public class CellularGenerator : EditorWindow {
 
         // Draw preview texture.
         GUILayout.Space(10);
-        EditorGUI.DrawPreviewTexture(new Rect(32, 450, 192, 192), _preview);
+        EditorGUI.DrawPreviewTexture(new Rect(32, 464, 192, 192), _preview);
 
         // Save button.
-        GUILayout.Space(244);
+        GUILayout.Space(254);
         if (GUILayout.Button("Save Texture")) {
             Texture2D tex = GenerateTexture(_resolution.x, _resolution.y);
             byte[] data = tex.EncodeToPNG();
@@ -191,8 +198,6 @@ public class CellularGenerator : EditorWindow {
                 break;
         }
 
-        _material.SetFloat("_Variation", _variation);
-
         float normFactor = 0f;
         for (int i = 0; i < _octaves; i++) {
             normFactor += Mathf.Pow(_persistance, i);
@@ -211,11 +216,21 @@ public class CellularGenerator : EditorWindow {
         }
         _material.SetFloat("_NormFactor", normFactor);
 
+        switch (_squaredDistance) {
+            case true:
+                _material.EnableKeyword("_SQUARED_DISTANCE");
+                break;
+            case false:
+                _material.DisableKeyword("_SQUARED_DISTANCE");
+                break;
+        }
+
+        _material.SetFloat("_Variation", _variation);
         _material.SetFloat("_Frequency", _frequency);
+        _material.SetFloat("_Jitter", _jitter);
         _material.SetFloat("_Octaves", (float)_octaves);
         _material.SetFloat("_Persistance", _persistance);
         _material.SetFloat("_Lacunarity", _lacunarity);
-        _material.SetFloat("_Jitter", _jitter);
 
         _material.SetFloat("_RangeMin", _rangeMin);
         _material.SetFloat("_RangeMax", _rangeMax);
