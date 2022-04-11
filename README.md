@@ -8,7 +8,15 @@ This project is a compilation of tools to generate textures like seamless noise 
 
 ## Instructions
 
-Just put all files on [Assets/Editor](source/Assets/Editor), [Assets/Scripts](source/Assets/Scripts) and [Assets/Shaders](source/Assets/Shaders) on your project.
+Just put all files on [Assets/Editor](source/Assets/Editor), and [Assets/Scripts](source/Assets/Scripts) on your project. A new option on Unity's editor menu should show up.
+
+![](images/menu.png)
+
+Just click any of them and a new editor window should pop up for you to use it.
+
+
+![](images/editor-windows-1.png)
+![](images/editor-windows-2.png)
 
 ## Credits
 
