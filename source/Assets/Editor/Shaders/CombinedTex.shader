@@ -43,11 +43,12 @@ Shader "Editor/CombinedTexture" {
 			}
 
 			float4 frag (v2f i) : SV_TARGET {
-				float4 col = 0;
+				float4 col = float4(0, 0, 0, 1);
 				col.r = tex2D(_TexR, i.uv).x;
 				col.g = tex2D(_TexG, i.uv).x;
 				col.b = tex2D(_TexB, i.uv).x;
 				col.a = tex2D(_TexA, i.uv).x;
+
 				return col;
 			}
 

@@ -22,7 +22,6 @@ public class TextureCombiner : EditorWindow {
     private Texture2D _preview;
 
     private void OnEnable () {
-
         // EditorPrefs to load settings when you last used it.
         _resolution.x = EditorPrefs.GetInt(
             "TOOL_TEXTURECOMBINER_resolution_x", 256);
@@ -150,7 +149,9 @@ public class TextureCombiner : EditorWindow {
                 newCol.r = Mathf.InverseLerp(min.r, max.r, inputCol.r);
                 newCol.g = Mathf.InverseLerp(min.g, max.g, inputCol.g);
                 newCol.b = Mathf.InverseLerp(min.b, max.b, inputCol.b);
-                newCol.a = Mathf.InverseLerp(min.a, max.a, inputCol.a);
+                if (_textureA) {
+                    newCol.a = Mathf.InverseLerp(min.a, max.a, inputCol.a);
+                }
                 tex.SetPixel(i, j, newCol);
             }
         }
