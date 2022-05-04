@@ -146,12 +146,25 @@ public class TextureCombiner : EditorWindow {
             for (int j = 0; j < tex.height; j++) {
                 Color inputCol = input.GetPixel(i, j);
                 Color newCol = new Color(0f, 0f, 0f, 1f);
+
                 newCol.r = Mathf.InverseLerp(min.r, max.r, inputCol.r);
                 newCol.g = Mathf.InverseLerp(min.g, max.g, inputCol.g);
                 newCol.b = Mathf.InverseLerp(min.b, max.b, inputCol.b);
-                if (_textureA) {
-                    newCol.a = Mathf.InverseLerp(min.a, max.a, inputCol.a);
+                newCol.a = Mathf.InverseLerp(min.a, max.a, inputCol.a);
+
+                if (min.r == max.r) {
+                    newCol.r = min.r;
                 }
+                if (min.g == max.g) {
+                    newCol.g = min.g;
+                }
+                if (min.b == max.b) {
+                    newCol.b = min.b;
+                }
+                if (min.a == max.a) {
+                    newCol.a = min.a;
+                }
+
                 tex.SetPixel(i, j, newCol);
             }
         }
